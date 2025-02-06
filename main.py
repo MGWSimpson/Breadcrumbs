@@ -1,14 +1,14 @@
-from binoculars import Binoculars
+from binoculars import LlamaDetector
 
-bino = Binoculars()
+bino = LlamaDetector()
 
 # ChatGPT (GPT-4) output when prompted with “Can you write a few sentences about a capybara that is an astrophysicist?"
-sample_string = '''Dr. Capy Cosmos, a capybara unlike any other, astounded the scientific community with his 
-groundbreaking research in astrophysics. With his keen sense of observation and unparalleled ability to interpret 
-cosmic data, he uncovered new insights into the mysteries of black holes and the origins of the universe. As he 
-peered through telescopes with his large, round eyes, fellow researchers often remarked that it seemed as if the 
-stars themselves whispered their secrets directly to him. Dr. Cosmos not only became a beacon of inspiration to 
-aspiring scientists but also proved that intellect and innovation can be found in the most unexpected of creatures.'''
+sample_string = '''Инвестиции представляют собой процесс вложения средств с целью получения прибыли в будущем. 
+                Они могут принимать различные формы, включая покупку акций, облигаций, недвижимости или открытие собственного бизнеса. 
+                Основной принцип инвестирования заключается в том, что вложенные деньги должны работать на вас, принося доход в виде дивидендов, процентов или прироста капитала. 
+                Важно помнить, что инвестиции всегда сопряжены с риском, и потенциальная прибыль часто пропорциональна уровню принимаемого риска. 
+                Поэтому перед принятием инвестиционных решений рекомендуется тщательно анализировать рынок, свои финансовые цели и уровень терпимости к риску. 
+                Умение правильно управлять инвестициями и диверсифицировать портфель может существенно повысить шансы на успешное вложение средств.'''
 
 print(bino.compute_score(sample_string))  # 0.75661373
 print(bino.predict(sample_string))  # 'Most likely AI-Generated'
