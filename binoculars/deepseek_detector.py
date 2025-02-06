@@ -25,8 +25,8 @@ DEVICE_2 = "cuda:1" if torch.cuda.device_count() > 1 else DEVICE_1
 
 class DeepSeek_Binoculars(object):
     def __init__(self,
-                 observer_name_or_path: str = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
-                 performer_name_or_path: str = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+                 observer_name_or_path: str = "deepseek-ai/DeepSeek-V3-Base",
+                 performer_name_or_path: str = "deepseek-ai/DeepSeek-V3",
                  use_bfloat16: bool = True,
                  max_token_observed: int = 512,
                  mode: str = "low-fpr",
