@@ -25,8 +25,8 @@ DEVICE_2 = "cuda:1" if torch.cuda.device_count() > 1 else DEVICE_1
 
 class DeepSeek_Binoculars(object):
     def __init__(self,
-                 observer_name_or_path: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
-                 performer_name_or_path: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+                 observer_name_or_path: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+                 performer_name_or_path: str = "prithivMLmods/Qwen2.5-1.5B-DeepSeek-R1-Instruct",
                  use_bfloat16: bool = True,
                  max_token_observed: int = 512,
                  mode: str = "low-fpr",
@@ -84,6 +84,10 @@ class DeepSeek_Binoculars(object):
         performer_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
+        
+        print("Observer logits shape:", observer_logits.shape)
+        print("Performer logits shape:", performer_logits.shape)
+        
         return observer_logits, performer_logits
 
     def compute_score(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
