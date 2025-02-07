@@ -57,6 +57,8 @@ class DeepSeek_Binoculars(object):
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
         self.max_token_observed = max_token_observed
+        # Флаг для печати информации только один раз
+        self._has_printed_logits = False
 
     def change_mode(self, mode: str) -> None:
         if mode == "low-fpr":
@@ -85,8 +87,11 @@ class DeepSeek_Binoculars(object):
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
         
-        print("Observer logits shape:", observer_logits.shape)
-        print("Performer logits shape:", performer_logits.shape)
+        # Печатаем информацию только при первом вызове метода
+        if not self._has_printed_logits:
+            print("Observer logits shape:", observer_logits.shape)
+            print("Performer logits shape:", performer_logits.shape)
+            self._has_printed_logits = True
         
         return observer_logits, performer_logits
 
