@@ -48,8 +48,8 @@ def run_eng_dataset(bino, sample_rate, max_samples=2000):
         else:
             print(f"{file_name} already exists. Skipping download.")
 
-    print("List of files:")
-    print(filenames)
+    #print("List of files:")
+    #print(filenames)
 
     for filename in filenames:
         parquet_file = pq.ParquetFile(filename)
@@ -211,15 +211,17 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
 
     # Функция для подсчета метрик
     def calculate_metrics(tp, fp, tn, fn):
-        #if not (tp or fp or tn or fn):
-        #    return None
+        # Преобразуем списки словарей в простые списки для подсчета
+        y_true = ([1] * len([x['text'] for x in tp]) + 
+                  [0] * len([x['text'] for x in fp]) + 
+                  [0] * len([x['text'] for x in tn]) + 
+                  [1] * len([x['text'] for x in fn]))
+        y_pred = ([1] * len([x['text'] for x in tp]) + 
+                  [1] * len([x['text'] for x in fp]) + 
+                  [0] * len([x['text'] for x in tn]) + 
+                  [0] * len([x['text'] for x in fn]))
         
-        y_true = ([1] * len(tp) + [0] * len(fp) + 
-                 [0] * len(tn) + [1] * len(fn))
-        y_pred = ([1] * len(tp) + [1] * len(fp) + 
-                 [0] * len(tn) + [0] * len(fn))
-        
-        if len(set(y_true)) < 2:  # Если есть только один класс
+        if len(set(y_true)) < 2:
             return {
                 'f1_score': None,
                 'roc_auc': None,
@@ -229,23 +231,22 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
                 'tnr': None,
                 'fnr': None
             }
-            
+        
         # Расчет базовых метрик
         f1 = metrics.f1_score(y_true, y_pred)
         fpr, tpr, _ = metrics.roc_curve(y_true=y_true, y_score=y_pred, pos_label=1)
         roc_auc = metrics.auc(fpr, tpr)
         tpr_at_fpr_0_01 = np.interp(0.01 / 100, fpr, tpr)
         
-        # Расчет confusion matrix для получения TNR и FNR
-        tn = len(tn)
-        fp = len(fp)
-        fn = len(fn)
-        tp = len(tp)
+        # Расчет confusion matrix метрик
+        tn = len([x['text'] for x in tn])
+        fp = len([x['text'] for x in fp])
+        fn = len([x['text'] for x in fn])
+        tp = len([x['text'] for x in tp])
         
-        # Расчет метрик
-        tpr_value = tp / (tp + fn) if (tp + fn) > 0 else 0  # Sensitivity, recall
+        tpr_value = tp / (tp + fn) if (tp + fn) > 0 else 0
         fpr_value = fp / (fp + tn) if (fp + tn) > 0 else 0
-        tnr_value = tn / (tn + fp) if (tn + fp) > 0 else 0  # Specificity
+        tnr_value = tn / (tn + fp) if (tn + fp) > 0 else 0
         fnr_value = fn / (fn + tp) if (fn + tp) > 0 else 0
         
         return {
