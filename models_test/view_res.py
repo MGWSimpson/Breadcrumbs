@@ -104,6 +104,7 @@ def main():
             print(f"Errors: {results_ru['data']['error_count']}")
 
             # Обновляем timestamp перед сохранением результатов
+            model_name = pair['name'].replace(' ', '_').replace('-', '_')
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             output_file_ru = os.path.join(output_dir, f"results_ru_{model_name}_{timestamp}.json")
             with open(output_file_ru, 'w', encoding='utf-8') as f:

@@ -71,7 +71,7 @@ def run_eng_dataset(bino, sample_rate, max_samples=2000):
                             continue
                         predicted_ai = (prediction == "Most likely AI-generated")
                     except Exception as e:
-                        print(f"Error predicting for text: {row.text}, Error: {e}")
+                        print(f"\nError predicting for text: {row.text}, Error: {e}")
                         error_count += 1
                         continue
 
@@ -170,7 +170,7 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
                     continue
                 predicted_ai = (prediction == "Most likely AI-generated")
             except Exception as e:
-                print(f"Error predicting for text: {row['text']}, Error: {e}")
+                print(f"\nError predicting for text: {row['text']}, Error: {e}")
                 error_count += 1
                 continue
 
