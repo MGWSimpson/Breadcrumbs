@@ -84,9 +84,13 @@ for pair in model_pairs:
     for dataset_name, metrics in results_ru['dataset_metrics'].items():
         if metrics:  # Проверяем, что метрики существуют для датасета
             print(f"\n{dataset_name}:")
-            print(f"F1 Score: {metrics['f1_score']:.4f if isinstance(metrics['f1_score'], (int, float)) else 'N/A'}")
-            print(f"ROC AUC: {metrics['roc_auc']:.4f if isinstance(metrics['roc_auc'], (int, float)) else 'N/A'}")
-            print(f"TPR at 0.01% FPR: {metrics['tpr_at_fpr_0_01']:.4f if isinstance(metrics['tpr_at_fpr_0_01'], (int, float)) else 'N/A'}")
+            f1_score = f"{metrics['f1_score']:.4f}" if isinstance(metrics['f1_score'], (int, float)) else "N/A"
+            roc_auc = f"{metrics['roc_auc']:.4f}" if isinstance(metrics['roc_auc'], (int, float)) else "N/A"
+            tpr = f"{metrics['tpr_at_fpr_0_01']:.4f}" if isinstance(metrics['tpr_at_fpr_0_01'], (int, float)) else "N/A"
+            
+            print(f"F1 Score: {f1_score}")
+            print(f"ROC AUC: {roc_auc}")
+            print(f"TPR at 0.01% FPR: {tpr}")
 
     print("\nCounts:")
     print(f"True Positives: {len(results_ru['data']['true_positives'])}")
