@@ -27,7 +27,6 @@ def main():
 
     output_dir = "./results"
     os.makedirs(output_dir, exist_ok=True)
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
     for pair in model_pairs:
         print(f"\nTesting {pair['name']}")
@@ -61,7 +60,10 @@ def main():
             print(f"False Negatives: {len(results_eng['data']['false_negatives'])}")
             print(f"Errors: {results_eng['data']['error_count']}")
 
-            output_file = os.path.join(output_dir, f"results_eng_{timestamp}.json")
+            # Обновляем timestamp перед сохранением результатов
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            model_name = pair['name'].replace(' ', '_').replace('-', '_')
+            output_file = os.path.join(output_dir, f"results_eng_{model_name}_{timestamp}.json")
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(results_eng, f, ensure_ascii=False, indent=2)
             print(f"\nResults saved to: {output_file}")
@@ -100,7 +102,9 @@ def main():
             print(f"False Negatives: {len(results_ru['data']['false_negatives'])}")
             print(f"Errors: {results_ru['data']['error_count']}")
 
-            output_file_ru = os.path.join(output_dir, f"results_ru_{timestamp}.json")
+            # Обновляем timestamp перед сохранением результатов
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_file_ru = os.path.join(output_dir, f"results_ru_{model_name}_{timestamp}.json")
             with open(output_file_ru, 'w', encoding='utf-8') as f:
                 json.dump(results_ru, f, ensure_ascii=False, indent=2)
             print(f"\nResults saved to: {output_file_ru}")

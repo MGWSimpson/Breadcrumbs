@@ -65,7 +65,11 @@ def run_eng_dataset(bino, sample_rate, max_samples=2000):
             for index, row in batch_pandas.iterrows():
                 if random.random() < sample_rate:
                     try:
-                        predicted_ai = (bino.predict(row.text) == "Most likely AI-generated")
+                        prediction = bino.predict(row.text)
+                        if isinstance(prediction, (int, float)) and prediction > 1:
+                            error_count += 1
+                            continue
+                        predicted_ai = (prediction == "Most likely AI-generated")
                     except Exception as e:
                         print(f"Error predicting for text: {row.text}, Error: {e}")
                         error_count += 1
@@ -103,12 +107,27 @@ def run_eng_dataset(bino, sample_rate, max_samples=2000):
     roc_auc = metrics.auc(fpr, tpr)
     # Интерполяция TPR при FPR = 0.01%
     tpr_at_fpr_0_01 = np.interp(0.01 / 100, fpr, tpr)
+    
+    # Расчет дополнительных метрик из confusion matrix
+    tn = len(true_negatives)
+    fp = len(false_positives)
+    fn = len(false_negatives)
+    tp = len(true_positives)
+    
+    tpr_value = tp / (tp + fn) if (tp + fn) > 0 else 0  # Sensitivity, recall
+    fpr_value = fp / (fp + tn) if (fp + tn) > 0 else 0
+    tnr_value = tn / (tn + fp) if (tn + fp) > 0 else 0  # Specificity
+    fnr_value = fn / (fn + tp) if (fn + tp) > 0 else 0
 
     return {
         'metrics': {
             'f1_score': f1_score,
             'roc_auc': roc_auc,
-            'tpr_at_fpr_0_01': tpr_at_fpr_0_01
+            'tpr_at_fpr_0_01': tpr_at_fpr_0_01,
+            'tpr': tpr_value,
+            'fpr': fpr_value,
+            'tnr': tnr_value,
+            'fnr': fnr_value
         },
         'data': {
             'true_positives': true_positives,
@@ -145,7 +164,11 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
             
         if random.random() < sample_rate:
             try:
-                predicted_ai = (bino.predict(row["text"]) == "Most likely AI-generated")
+                prediction = bino.predict(row["text"])
+                if isinstance(prediction, (int, float)) and prediction > 1:
+                    error_count += 1
+                    continue
+                predicted_ai = (prediction == "Most likely AI-generated")
             except Exception as e:
                 print(f"Error predicting for text: {row['text']}, Error: {e}")
                 error_count += 1
@@ -188,8 +211,8 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
 
     # Функция для подсчета метрик
     def calculate_metrics(tp, fp, tn, fn):
-        if not (tp or fp or tn or fn):
-            return None
+        #if not (tp or fp or tn or fn):
+        #    return None
         
         y_true = ([1] * len(tp) + [0] * len(fp) + 
                  [0] * len(tn) + [1] * len(fn))
@@ -200,18 +223,39 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
             return {
                 'f1_score': None,
                 'roc_auc': None,
-                'tpr_at_fpr_0_01': None
+                'tpr_at_fpr_0_01': None,
+                'tpr': None,
+                'fpr': None,
+                'tnr': None,
+                'fnr': None
             }
             
+        # Расчет базовых метрик
         f1 = metrics.f1_score(y_true, y_pred)
         fpr, tpr, _ = metrics.roc_curve(y_true=y_true, y_score=y_pred, pos_label=1)
         roc_auc = metrics.auc(fpr, tpr)
         tpr_at_fpr_0_01 = np.interp(0.01 / 100, fpr, tpr)
         
+        # Расчет confusion matrix для получения TNR и FNR
+        tn = len(tn)
+        fp = len(fp)
+        fn = len(fn)
+        tp = len(tp)
+        
+        # Расчет метрик
+        tpr_value = tp / (tp + fn) if (tp + fn) > 0 else 0  # Sensitivity, recall
+        fpr_value = fp / (fp + tn) if (fp + tn) > 0 else 0
+        tnr_value = tn / (tn + fp) if (tn + fp) > 0 else 0  # Specificity
+        fnr_value = fn / (fn + tp) if (fn + tp) > 0 else 0
+        
         return {
             'f1_score': f1,
             'roc_auc': roc_auc,
-            'tpr_at_fpr_0_01': tpr_at_fpr_0_01
+            'tpr_at_fpr_0_01': tpr_at_fpr_0_01,
+            'tpr': tpr_value,
+            'fpr': fpr_value,
+            'tnr': tnr_value,
+            'fnr': fnr_value
         }
 
     # Подсчет общих метрик
