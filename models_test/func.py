@@ -221,16 +221,16 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
                   [0] * len([x['text'] for x in tn]) + 
                   [0] * len([x['text'] for x in fn]))
         
-        if len(set(y_true)) < 2:
-            return {
-                'f1_score': None,
-                'roc_auc': None,
-                'tpr_at_fpr_0_01': None,
-                'tpr': None,
-                'fpr': None,
-                'tnr': None,
-                'fnr': None
-            }
+        # if len(set(y_true)) < 2:
+        #     return {
+        #         'f1_score': None,
+        #         'roc_auc': None,
+        #         'tpr_at_fpr_0_01': None,
+        #         'tpr': None,
+        #         'fpr': None,
+        #         'tnr': None,
+        #         'fnr': None
+        #     }
         
         # Расчет базовых метрик
         f1 = metrics.f1_score(y_true, y_pred)
