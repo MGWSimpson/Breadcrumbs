@@ -40,7 +40,7 @@ for pair in model_pairs:
     }
 
     # Вывод метрик
-    print("English dataset results:")
+    print("\nEnglish dataset results:")
     print("\nMetrics:")
     print(f"F1 Score: {results_eng['metrics']['f1_score']:.4f}")
     print(f"ROC AUC: {results_eng['metrics']['roc_auc']:.4f}")
@@ -64,7 +64,7 @@ for pair in model_pairs:
 
     print(f"\nResults saved to: {output_file}")
 
-    results_ru = run_ru_dataset(bino, sample_rate=0.1, max_samples=2000)
+    results_ru = run_ru_dataset(bino, sample_rate=0.6, max_samples=2000)
     
     # Добавляем информацию о моделях в результаты
     results_ru['model_pair'] = {
@@ -79,7 +79,7 @@ for pair in model_pairs:
     print(f"F1 Score: {results_ru['overall_metrics']['f1_score']:.4f}")
     print(f"ROC AUC: {results_ru['overall_metrics']['roc_auc']:.4f}")
     print(f"TPR at 0.01% FPR: {results_ru['overall_metrics']['tpr_at_fpr_0_01']:.4f}")
-    """
+
     print("\nMetrics by dataset:")
     for dataset_name, metrics in results_ru['dataset_metrics'].items():
         if metrics:  # Проверяем, что метрики существуют для датасета
@@ -87,7 +87,7 @@ for pair in model_pairs:
             print(f"F1 Score: {metrics['f1_score']:.4f if metrics['f1_score'] is not None else 'N/A'}")
             print(f"ROC AUC: {metrics['roc_auc']:.4f if metrics['roc_auc'] is not None else 'N/A'}")
             print(f"TPR at 0.01% FPR: {metrics['tpr_at_fpr_0_01']:.4f if metrics['tpr_at_fpr_0_01'] is not None else 'N/A'}")
-    """
+
     print("\nCounts:")
     print(f"True Positives: {len(results_ru['data']['true_positives'])}")
     print(f"False Positives: {len(results_ru['data']['false_positives'])}")
