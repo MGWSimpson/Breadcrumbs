@@ -14,14 +14,15 @@ def main():
     # Определяем пары моделей для тестирования
     model_pairs = [
         {
-            "observer": "deepseek-ai/deepseek-llm-7b-chat",
-            "performer": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
-            "name": "Pair 1 - deepseek-llm-7b-chat and deepseek-coder-7b-instruct-v1.5"
+            "observer": "Qwen/Qwen2.5-1.5B",
+            "performer": "Qwen/Qwen2.5-1.5B-Instruct",
+            "name": "Pair 1 - Qwen2.5-1.5B and Qwen2.5-1.5B-Instruct"
         },
+
         {
-            "observer": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
-            "performer": "deepseek-ai/deepseek-llm-7b-chat",
-            "name": "Pair 2 - deepseek-coder-7b-instruct-v1.5 and deepseek-llm-7b-chat"
+            "observer": "Qwen/Qwen2.5-1.5B-Instruct",
+            "performer": "Qwen/Qwen2.5-1.5B",
+            "name": "Pair 2 - Qwen2.5-1.5B-Instruct and Qwen2.5-1.5B"
         }
     ]
 
