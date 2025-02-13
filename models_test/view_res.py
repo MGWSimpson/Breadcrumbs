@@ -14,14 +14,14 @@ def main():
     # Определяем пары моделей для тестирования
     model_pairs = [
         {
-            "observer": "deepseek-ai/deepseek-llm-7b-base",
-            "performer": "deepseek-ai/deepseek-llm-7b-chat",
-            "name": "Pair 1 - deepseek-llm-7b-base and deepseek-llm-7b-chat"
+            "observer": "tiiuae/falcon-7b",
+            "performer": "tiiuae/falcon-7b-instruct",
+            "name": "Pair 1 - falcon-7b and falcon-7b-instruct"
         },
         {
-            "observer": "deepseek-ai/deepseek-llm-7b-base",
-            "performer": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
-            "name": "Pair 2 - deepseek-llm-7b-base and deepseek-coder-7b-instruct-v1.5"
+            "observer": "tiiuae/falcon-mamba-7b",
+            "performer": "tiiuae/falcon-mamba-7b-instruct",
+            "name": "Pair 2 - falcon-mamba-7b and falcon-mamba-7b-instruct"
         }
     ]
     output_dir = "./results"
