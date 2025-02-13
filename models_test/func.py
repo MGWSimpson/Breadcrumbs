@@ -209,7 +209,7 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
                 sys.stdout.write(f"\rProcessed: {check_counter} items")
                 sys.stdout.flush()
 
-    # Функция для подсчета метрик
+    # Измененная функция для подсчета метрик с обработкой случая одного класса
     def calculate_metrics(tp, fp, tn, fn):
         # Преобразуем списки словарей в простые списки для подсчета
         y_true = ([1] * len([x['text'] for x in tp]) + 
@@ -221,22 +221,17 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
                   [0] * len([x['text'] for x in tn]) + 
                   [0] * len([x['text'] for x in fn]))
         
-        # if len(set(y_true)) < 2:
-        #     return {
-        #         'f1_score': None,
-        #         'roc_auc': None,
-        #         'tpr_at_fpr_0_01': None,
-        #         'tpr': None,
-        #         'fpr': None,
-        #         'tnr': None,
-        #         'fnr': None
-        #     }
         
-        # Расчет базовых метрик
-        f1 = metrics.f1_score(y_true, y_pred)
-        fpr, tpr, _ = metrics.roc_curve(y_true=y_true, y_score=y_pred, pos_label=1)
-        roc_auc = metrics.auc(fpr, tpr)
-        tpr_at_fpr_0_01 = np.interp(0.01 / 100, fpr, tpr)
+        # Если присутствует только один класс в данных, то roc_auc и tpr_at_fpr_0_01 не определены
+        if len(set(y_true)) < 2:
+            f1 = metrics.f1_score(y_true, y_pred, zero_division=0)
+            roc_auc = float("nan")
+            tpr_at_fpr_0_01 = float("nan")
+        else:
+            f1 = metrics.f1_score(y_true, y_pred)
+            fpr_values, tpr_values, _ = metrics.roc_curve(y_true=y_true, y_score=y_pred, pos_label=1)
+            roc_auc = metrics.auc(fpr_values, tpr_values)
+            tpr_at_fpr_0_01 = np.interp(0.01 / 100, fpr_values, tpr_values)
         
         # Расчет confusion matrix метрик
         tn = len([x['text'] for x in tn])
