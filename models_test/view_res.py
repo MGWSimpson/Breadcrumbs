@@ -22,14 +22,8 @@ def main():
             "observer": "deepseek-ai/deepseek-llm-7b-base",
             "performer": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
             "name": "Pair 2 - deepseek-llm-7b-base and deepseek-coder-7b-instruct-v1.5"
-        },
-        {
-            "observer": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
-            "performer": "deepseek-ai/deepseek-llm-7b-base",
-            "name": "Pair 3 - deepseek-coder-7b-instruct-v1.5 and deepseek-llm-7b-base"
         }
     ]
-
     output_dir = "./results"
     os.makedirs(output_dir, exist_ok=True)
 
