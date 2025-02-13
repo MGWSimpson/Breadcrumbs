@@ -70,7 +70,7 @@ def main():
             print(f"\nResults saved to: {output_file}")
 
         if args.dataset in ['ru', 'all']:
-            results_ru = run_ru_dataset(bino, sample_rate=0.35, max_samples=2000)
+            results_ru = run_ru_dataset(bino, sample_rate=1, max_samples=6000)
             results_ru['model_pair'] = {
                 'observer': pair['observer'],
                 'performer': pair['performer'],
