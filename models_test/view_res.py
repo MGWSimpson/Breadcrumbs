@@ -14,15 +14,19 @@ def main():
     # Определяем пары моделей для тестирования
     model_pairs = [
         {
-            "observer": "Qwen/Qwen2.5-1.5B",
-            "performer": "Qwen/Qwen2.5-1.5B-Instruct",
-            "name": "Pair 1 - Qwen2.5-1.5B and Qwen2.5-1.5B-Instruct"
+            "observer": "deepseek-ai/deepseek-llm-7b-base",
+            "performer": "deepseek-ai/deepseek-llm-7b-chat",
+            "name": "Pair 1 - deepseek-llm-7b-base and deepseek-llm-7b-chat"
         },
-
         {
-            "observer": "Qwen/Qwen2.5-1.5B-Instruct",
-            "performer": "Qwen/Qwen2.5-1.5B",
-            "name": "Pair 2 - Qwen2.5-1.5B-Instruct and Qwen2.5-1.5B"
+            "observer": "deepseek-ai/deepseek-llm-7b-base",
+            "performer": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
+            "name": "Pair 2 - deepseek-llm-7b-base and deepseek-coder-7b-instruct-v1.5"
+        },
+        {
+            "observer": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
+            "performer": "deepseek-ai/deepseek-llm-7b-base",
+            "name": "Pair 3 - deepseek-coder-7b-instruct-v1.5 and deepseek-llm-7b-base"
         }
     ]
 
@@ -70,7 +74,7 @@ def main():
             print(f"\nResults saved to: {output_file}")
 
         if args.dataset in ['ru', 'all']:
-            results_ru = run_ru_dataset(bino, sample_rate=1, max_samples=6000)
+            results_ru = run_ru_dataset(bino, sample_rate=0.5, max_samples=4000)
             results_ru['model_pair'] = {
                 'observer': pair['observer'],
                 'performer': pair['performer'],

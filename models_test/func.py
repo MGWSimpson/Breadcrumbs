@@ -134,7 +134,8 @@ def run_eng_dataset(bino, sample_rate, max_samples=2000):
             'false_positives': false_positives,
             'true_negatives': true_negatives,
             'false_negatives': false_negatives,
-            'error_count': error_count
+            'error_count': error_count,
+            'check_counter': check_counter
         }
     }
 
@@ -274,6 +275,7 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
             'false_positives': false_positives,
             'true_negatives': true_negatives,
             'false_negatives': false_negatives,
-            'error_count': error_count
+            'error_count': error_count,
+            'check_counter': check_counter
         }
     }
