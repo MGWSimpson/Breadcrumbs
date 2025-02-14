@@ -210,56 +210,54 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
                 sys.stdout.write(f"\rProcessed: {check_counter} items")
                 sys.stdout.flush()
 
-    # Измененная функция для подсчета метрик с обработкой случая одного класса
+    # Измененная функция для подсчета метрик
     def calculate_metrics(tp, fp, tn, fn):
-        # Преобразуем списки словарей в простые списки для подсчета
-        y_true = ([1] * len([x['text'] for x in tp]) + 
-                  [0] * len([x['text'] for x in fp]) + 
-                  [0] * len([x['text'] for x in tn]) + 
-                  [1] * len([x['text'] for x in fn]))
-        y_pred = ([1] * len([x['text'] for x in tp]) + 
-                  [1] * len([x['text'] for x in fp]) + 
-                  [0] * len([x['text'] for x in tn]) + 
-                  [0] * len([x['text'] for x in fn]))
-        
-        
-        # Если присутствует только один класс в данных, то roc_auc и tpr_at_fpr_0_01 не определены
+        # Подсчитываем количество примеров для каждого элемента confusion matrix
+        tp_count = len([x['text'] for x in tp])
+        fp_count = len([x['text'] for x in fp])
+        tn_count = len([x['text'] for x in tn])
+        fn_count = len([x['text'] for x in fn])
+
+        # Формируем списки истинных и предсказанных меток
+        y_true = [1] * tp_count + [0] * fp_count + [0] * tn_count + [1] * fn_count
+        y_pred = [1] * tp_count + [1] * fp_count + [0] * tn_count + [0] * fn_count
+
+        metrics_dict = {}
+
+        # Если данные содержат только один класс, ROC AUC и TPR при FPR = 0.01 посчитать нельзя.
+        # В этом случае вычисляем F1 score, используя имеющийся класс как позитивный.
         if len(set(y_true)) < 2:
-            f1 = metrics.f1_score(y_true, y_pred, zero_division=0)
-            roc_auc = float("nan")
-            tpr_at_fpr_0_01 = float("nan")
+            unique_class = list(set(y_true))[0]
+            f1 = metrics.f1_score(y_true, y_pred, pos_label=unique_class, zero_division=0)
+            metrics_dict['f1_score'] = f1
+            metrics_dict['roc_auc'] = None
+            metrics_dict['tpr_at_fpr_0_01'] = None
         else:
             f1 = metrics.f1_score(y_true, y_pred)
-            fpr_values, tpr_values, _ = metrics.roc_curve(y_true=y_true, y_score=y_pred, pos_label=1)
+            fpr_values, tpr_values, _ = metrics.roc_curve(y_true, y_pred, pos_label=1)
             roc_auc = metrics.auc(fpr_values, tpr_values)
-            tpr_at_fpr_0_01 = np.interp(0.01 / 100, fpr_values, tpr_values)
-        
-        # Расчет confusion matrix метрик
-        tn = len([x['text'] for x in tn])
-        fp = len([x['text'] for x in fp])
-        fn = len([x['text'] for x in fn])
-        tp = len([x['text'] for x in tp])
-        
-        tpr_value = tp / (tp + fn) if (tp + fn) > 0 else 0
-        fpr_value = fp / (fp + tn) if (fp + tn) > 0 else 0
-        tnr_value = tn / (tn + fp) if (tn + fp) > 0 else 0
-        fnr_value = fn / (fn + tp) if (fn + tp) > 0 else 0
-        
-        return {
-            'f1_score': f1,
-            'roc_auc': roc_auc,
-            'tpr_at_fpr_0_01': tpr_at_fpr_0_01,
-            'tpr': tpr_value,
-            'fpr': fpr_value,
-            'tnr': tnr_value,
-            'fnr': fnr_value
-        }
+            tpr_at_fpr = np.interp(0.01 / 100, fpr_values, tpr_values)
+            metrics_dict['f1_score'] = f1
+            metrics_dict['roc_auc'] = roc_auc
+            metrics_dict['tpr_at_fpr_0_01'] = tpr_at_fpr
 
-    # Подсчет общих метрик
-    overall_metrics = calculate_metrics(true_positives, false_positives, 
-                                     true_negatives, false_negatives)
+        # Расчет метрик на основе confusion matrix
+        tpr_value = tp_count / (tp_count + fn_count) if (tp_count + fn_count) > 0 else 0
+        fpr_value = fp_count / (fp_count + tn_count) if (fp_count + tn_count) > 0 else 0
+        tnr_value = tn_count / (tn_count + fp_count) if (tn_count + fp_count) > 0 else 0
+        fnr_value = fn_count / (fn_count + tp_count) if (fn_count + tp_count) > 0 else 0
 
-    # Подсчет метрик для каждого датасета
+        metrics_dict['tpr'] = tpr_value
+        metrics_dict['fpr'] = fpr_value
+        metrics_dict['tnr'] = tnr_value
+        metrics_dict['fnr'] = fnr_value
+
+        return metrics_dict
+
+    # Подсчет общих метрик для всего русского датасета
+    overall_metrics = calculate_metrics(true_positives, false_positives, true_negatives, false_negatives)
+
+    # Подсчет метрик для каждого отдельного датасета
     dataset_metrics = {}
     for dataset_name, results in dataset_results.items():
         dataset_metrics[dataset_name] = calculate_metrics(

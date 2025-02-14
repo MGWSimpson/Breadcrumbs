@@ -13,15 +13,20 @@ def main():
 
     # Определяем пары моделей для тестирования
     model_pairs = [
+        # {
+        #     "observer": "tiiuae/falcon-7b",
+        #     "performer": "tiiuae/falcon-7b-instruct", 
+        #     "name": "Pair 1 - falcon-7b and falcon-7b-instruct"
+        # },
+        # {
+        #     "observer": "tiiuae/falcon-mamba-7b",
+        #     "performer": "tiiuae/falcon-mamba-7b-instruct",
+        #     "name": "Pair 2 - falcon-mamba-7b and falcon-mamba-7b-instruct"
+        # },
         {
-            "observer": "tiiuae/falcon-7b",
-            "performer": "tiiuae/falcon-7b-instruct",
-            "name": "Pair 1 - falcon-7b and falcon-7b-instruct"
-        },
-        {
-            "observer": "tiiuae/falcon-mamba-7b",
-            "performer": "tiiuae/falcon-mamba-7b-instruct",
-            "name": "Pair 2 - falcon-mamba-7b and falcon-mamba-7b-instruct"
+            "observer": "Qwen/Qwen2.5-1.5B",
+            "performer": "Qwen/Qwen2.5-1.5B-Instruct",
+            "name": "Pair 1 - Qwen2.5-1.5B and Qwen2.5-1.5B-Instruct"
         }
     ]
     output_dir = "./results"
