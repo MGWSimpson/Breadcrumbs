@@ -62,7 +62,8 @@ def main():
 
             # Обновляем timestamp перед сохранением результатов
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            model_name = pair['name'].replace(' ', '_').replace('-', '_')
+            # Заменяем недопустимые символы в имени модели
+            model_name = pair['name'].replace(' ', '_').replace('-', '_').replace('/', '_')
             output_file = os.path.join(output_dir, f"results_eng_{model_name}_{timestamp}.json")
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(results_eng, f, ensure_ascii=False, indent=2)
@@ -103,7 +104,7 @@ def main():
             print(f"Errors: {results_ru['data']['error_count']}")
 
             # Обновляем timestamp перед сохранением результатов
-            model_name = pair['name'].replace(' ', '_').replace('-', '_')
+            model_name = pair['name'].replace(' ', '_').replace('-', '_').replace('/', '_')
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             output_file_ru = os.path.join(output_dir, f"results_ru_{model_name}_{timestamp}.json")
             with open(output_file_ru, 'w', encoding='utf-8') as f:
