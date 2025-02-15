@@ -18,11 +18,11 @@ def main():
     # Определяем тройки моделей для тестирования
     model_triples = [
         {
-            "model1": "deepseek-ai/deepseek-llm-7b-base",
-            "model2": "deepseek-ai/deepseek-llm-7b-chat",
+            "model1": "Qwen/Qwen2.5-1.5B",
+            "model2": "Qwen/Qwen2.5-1.5B-Instruct",
             # Для примера используем ту же модель, что и observer, чтобы токенизаторы были совместимы
-            "model3": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
-            "name": "Triple 1 - deepseek-llm-7b-base, deepseek-llm-7b-chat, deepseek-coder-7b-instruct-v1.5"
+            "model3": "Qwen/Qwen2.5-Coder-1.5B",
+            "name": "Triple 1 - Qwen2.5-1.5B, Qwen2.5-1.5B-Instruct, Qwen2.5-Coder-1.5B"
         }
     ]
 
