@@ -13,16 +13,15 @@ def main():
 
     # Определяем пары моделей для тестирования
     model_pairs = [
-
         {
-            "observer": "RefalMachine/T-lite-it-1.0-pseudo-base",
-            "performer": "t-tech/T-lite-it-1.0",
-            "name": "Pair 1 - T-lite-it-1.0-pseudo-base and t-tech/T-lite-it-1.0"
+            "observer": "tiiuae/Falcon3-7B-Base",
+            "performer": "tiiuae/Falcon3-7B-Instruct",
+            "name": "Pair 1 - Falcon3-7B-Base and Falcon3-7B-Instruct"
         },
         {
-            "observer": "tiiuae/falcon-mamba-7b",
-            "performer": "tiiuae/falcon-mamba-7b-instruct",
-            "name": "Pair 2 - falcon-mamba-7b and falcon-mamba-7b-instruct"
+            "observer": "bigscience/bloom-7b1",
+            "performer": "strnam/instruction-bloom-7b1",
+            "name": "Pair 2 - bigscience/bloom-7b1 and strnam/instruction-bloom-7b1"  
         }
     ]
     output_dir = "./results"
