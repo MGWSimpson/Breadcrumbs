@@ -33,7 +33,7 @@ def main():
         )
 
         if args.dataset in ['eng', 'all']:
-            results_eng = run_eng_dataset(bino, sample_rate=0.0013, max_samples=2500)
+            results_eng = run_eng_dataset(bino, sample_rate=0.003, max_samples=5000)
             results_eng['model_pair'] = {
                 'observer': pair['observer'],
                 'performer': pair['performer'],
