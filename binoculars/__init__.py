@@ -1,4 +1,4 @@
 from .detector import Binoculars
-from .3_detector import Trinoculars
+from .tri_detector import Trinoculars
 
 __all__ = ["Binoculars", "Trinoculars"]
