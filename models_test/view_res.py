@@ -14,14 +14,9 @@ def main():
     # Определяем пары моделей для тестирования
     model_pairs = [
         {
-            "observer": "tiiuae/Falcon3-7B-Base",
-            "performer": "tiiuae/Falcon3-7B-Instruct",
-            "name": "Pair 1 - Falcon3-7B-Base and Falcon3-7B-Instruct"
-        },
-        {
-            "observer": "bigscience/bloom-7b1",
-            "performer": "strnam/instruction-bloom-7b1",
-            "name": "Pair 2 - bigscience/bloom-7b1 and strnam/instruction-bloom-7b1"  
+            "observer": "Qwen/Qwen2.5-1.5B",
+            "performer": "Qwen/Qwen2.5-Coder-1.5B",
+            "name": "Pair 1 - Qwen2.5-1.5B and Qwen2.5-Coder-1.5B"
         }
     ]
     output_dir = "./results"
