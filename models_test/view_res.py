@@ -15,8 +15,8 @@ def main():
     model_pairs = [
         {
             "observer": "Qwen/Qwen2.5-1.5B",
-            "performer": "Qwen/Qwen2.5-Coder-1.5B",
-            "name": "Pair 1 - Qwen2.5-1.5B and Qwen2.5-Coder-1.5B"
+            "performer": "Vikhrmodels/QVikhr-2.5-1.5B-Instruct-r",
+            "name": "Pair 1 - Qwen2.5-1.5B and QVikhr-2.5-1.5B-Instruct-r"
         }
     ]
     output_dir = "./results"
