@@ -7,4 +7,4 @@ gradio_client
 scikit-learn
 seaborn
 pandas
-flash_attn
+#flash_attn
