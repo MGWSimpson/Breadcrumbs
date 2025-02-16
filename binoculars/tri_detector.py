@@ -200,9 +200,11 @@ class Trinoculars(object):
 
     def predict(self, input_text):
         """
-        Бинарная классификация с использованием мажоритарного голосования:
-        Если 2 из 3 итоговых Binoculars Scores (B12, B13, B23) меньше порога,
-        то возвращается "Most likely AI-generated", иначе – "Most likely human-generated".
+        Новая логика бинарной классификации:
+        Рассчитываются оценки для пар (M1, M2) и (M1, M3).
+        Если хотя бы одна из пар имеет оценку, указывающую на "human-generated" (т.е. значение >= threshold),
+        то возвращается "Most likely human-generated".
+        Иначе – "Most likely AI-generated".
         """
         is_string_input = isinstance(input_text, str)
         batch = [input_text] if is_string_input else input_text
@@ -216,29 +218,31 @@ class Trinoculars(object):
         logits3_ = logits3.to(DEVICE_1)
         pad_id = self.tokenizer.pad_token_id
 
+        # Вычисляем perplexity для модели M1
         ppl1 = perplexity(encodings_, logits1_)
-        ppl2 = perplexity(encodings_, logits2_)
-
+        # Рассчитываем кросс-перплексии для пар (M1, M2) и (M1, M3)
         x_ppl12 = entropy(logits1_, logits2_, encodings_, pad_id)
         x_ppl13 = entropy(logits1_, logits3_, encodings_, pad_id)
-        x_ppl23 = entropy(logits2_, logits3_, encodings_, pad_id)
 
         B12 = ppl1 / x_ppl12
         B13 = ppl1 / x_ppl13
-        B23 = ppl2 / x_ppl23
 
-        # Если на вход одно предложение, то вычисляем голосование для одного экземпляра
+        # Функция, определяющая итоговое решение для одного примера
+        def get_prediction(b12, b13, threshold):
+            # Если хотя бы одна из пар имеет оценку больше или равную порогу,
+            # значит модель считает текст, скорее всего, человеческим.
+            if b12 >= threshold or b13 >= threshold:
+                return "Most likely human-generated"
+            else:
+                return "Most likely AI-generated"
+
         if is_string_input:
-            vote_count = (B12 < self.threshold) + (B13 < self.threshold) + (B23 < self.threshold)
-            return "Most likely AI-generated" if vote_count >= 2 else "Most likely human-generated"
+            return get_prediction(B12, B13, self.threshold)
         else:
             predictions = []
-            # Если результаты представлены как тензоры, приводим к numpy-массивам
             if hasattr(B12, "cpu"):
                 B12 = B12.cpu().numpy()
                 B13 = B13.cpu().numpy()
-                B23 = B23.cpu().numpy()
-            for b12, b13, b23 in zip(B12, B13, B23):
-                vote_count = (b12 < self.threshold) + (b13 < self.threshold) + (b23 < self.threshold)
-                predictions.append("Most likely AI-generated" if vote_count >= 2 else "Most likely human-generated")
+            for b12, b13 in zip(B12, B13):
+                predictions.append(get_prediction(b12, b13, self.threshold))
             return predictions
