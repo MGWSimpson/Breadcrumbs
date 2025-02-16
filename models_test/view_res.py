@@ -14,9 +14,9 @@ def main():
     # Определяем пары моделей для тестирования
     model_pairs = [
         {
-            "observer": "Qwen/Qwen2.5-1.5B",
-            "performer": "Vikhrmodels/QVikhr-2.5-1.5B-Instruct-r",
-            "name": "Pair 1 - Qwen2.5-1.5B and QVikhr-2.5-1.5B-Instruct-r"
+            "observer": "deepseek-ai/deepseek-llm-7b-chat",
+            "performer": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
+            "name": "Pair 1 - DeepSeek-LLM-7B-Chat and DeepSeek-Coder-7B-Instruct-v1.5"
         }
     ]
     output_dir = "./results"
