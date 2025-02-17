@@ -17,6 +17,11 @@ def main():
             "observer": "deepseek-ai/deepseek-llm-7b-base",
             "performer": "deepseek_coder_7b_instruct_v1.5",
             "name": "Pair 1 - deepseek-llm-7b-base and Ddeepseek_coder_7b_instruct_v1.5"
+        },
+        {
+            "observer": "deepseek-ai/deepseek-llm-7b-base",
+            "performer": "deepseek-ai/deepseek-llm-7b-chat",
+            "name": "Pair 1 - deepseek-llm-7b-base and deepseek-ai/deepseek-llm-7b-chat"
         }
     ]
     output_dir = "./results"
