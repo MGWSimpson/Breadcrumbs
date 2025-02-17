@@ -83,7 +83,7 @@ def main():
                 # Получаем имя датасета без расширения для использования в выводе
                 dataset_name = os.path.splitext(json_file)[0]
                 
-                results_ru = run_ru_dataset(bino, sample_rate=0.5, data=dataset, max_samples=4000)
+                results_ru = run_ru_dataset(bino, sample_rate=0.75, data=dataset, max_samples=4000)
                 results_ru['model_pair'] = {
                     'observer': pair['observer'],
                     'performer': pair['performer'],
