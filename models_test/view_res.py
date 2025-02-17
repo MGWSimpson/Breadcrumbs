@@ -14,9 +14,9 @@ def main():
     # Определяем пары моделей для тестирования
     model_pairs = [
         {
-            "observer": "deepseek-ai/deepseek-llm-7b-chat",
-            "performer": "deepseek-ai/deepseek-coder-7b-instruct-v1.5",
-            "name": "Pair 1 - DeepSeek-LLM-7B-Chat and DeepSeek-Coder-7B-Instruct-v1.5"
+            "observer": "deepseek-ai/deepseek-llm-7b-base",
+            "performer": "deepseek_coder_7b_instruct_v1.5",
+            "name": "Pair 1 - deepseek-llm-7b-base and Ddeepseek_coder_7b_instruct_v1.5"
         }
     ]
     output_dir = "./results"
