@@ -141,7 +141,7 @@ def run_eng_dataset(bino, sample_rate, max_samples=2000):
 
 
 
-def run_ru_dataset(bino, sample_rate, max_samples=2000):
+def run_ru_dataset(bino, sample_rate, data, max_samples=2000):
     true_positives = []
     false_positives = []
     true_negatives = []
@@ -149,14 +149,6 @@ def run_ru_dataset(bino, sample_rate, max_samples=2000):
     error_count = 0
     check_counter = 0
 
-    data_dir = "./data"
-    os.makedirs(data_dir, exist_ok=True)
-
-    json_path = os.path.join(data_dir, "ru_detection_dataset.json")
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    # Создаем словарь для хранения результатов по датасетам
     dataset_results = {}
 
     for row in data:
