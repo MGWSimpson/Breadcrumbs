@@ -15,7 +15,7 @@ def main():
     model_pairs = [
         {
             "observer": "deepseek-ai/deepseek-llm-7b-base",
-            "performer": "deepseek_coder_7b_instruct_v1.5",
+            "performer": "deepseek-ai/deepseek_coder_7b_instruct_v1.5",
             "name": "Pair 1 - deepseek-llm-7b-base and Ddeepseek_coder_7b_instruct_v1.5"
         },
         {
