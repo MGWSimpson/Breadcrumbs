@@ -64,6 +64,19 @@ class Binoculars(object):
             self.threshold = BINOCULARS_ACCURACY_THRESHOLD
         else:
             raise ValueError(f"Invalid mode: {mode}")
+        
+    def free_memory(self) -> None:
+        self.observer_model = self.observer_model.to('cpu')
+        self.performer_model = self.performer_model.to('cpu')
+        
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+
+        del self.observer_model
+        del self.performer_model
+        self.observer_model = None
+        self.performer_model = None
 
     def _tokenize(self, batch: list[str]) -> transformers.BatchEncoding:
         batch_size = len(batch)
