@@ -6,12 +6,11 @@ import datetime
 import argparse
 
 def main():
-    parser = argparse.ArgumentParser(description='Запуск тестирования моделей на выбранном датасете')
+    parser = argparse.ArgumentParser(description='Run model testing on selected dataset')
     parser.add_argument('--dataset', type=str, choices=['ru', 'eng', 'all'], 
-                       default='all', help='Выбор датасета для тестирования (ru/eng/all)')
+                       default='all', help='Choose dataset for testing (ru/eng/all)')
     args = parser.parse_args()
 
-    # Определяем пары моделей для тестирования
     model_pairs = [
         {
             "observer": "deepseek-ai/deepseek-llm-7b-base",
@@ -45,7 +44,6 @@ def main():
                 'pair_name': pair['name']
             }
             
-            # Вывод метрик для английского датасета
             print("\nEnglish dataset results:")
             print("\nMetrics:")
             print(f"F1 Score: {results_eng['metrics']['f1_score']:.4f}")
@@ -59,9 +57,7 @@ def main():
             print(f"False Negatives: {len(results_eng['data']['false_negatives'])}")
             print(f"Errors: {results_eng['data']['error_count']}")
 
-            # Обновляем timestamp перед сохранением результатов
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            # Заменяем недопустимые символы в имени модели
             model_name = pair['name'].replace(' ', '_').replace('-', '_').replace('/', '_')
             output_file = os.path.join(output_dir, f"results_eng_{model_name}_{timestamp}.json")
             with open(output_file, 'w', encoding='utf-8') as f:
@@ -69,7 +65,6 @@ def main():
             print(f"\nResults saved to: {output_file}")
 
         if args.dataset in ['ru', 'all']:
-            # Получаем список всех JSON файлов в папке data
             data_dir = "./data"
             json_files = [f for f in os.listdir(data_dir) if f.endswith('.json')]
             
@@ -80,7 +75,6 @@ def main():
                 with open(file_path, "r", encoding="utf-8") as f:
                     dataset = json.load(f)
                 
-                # Получаем имя датасета без расширения для использования в выводе
                 dataset_name = os.path.splitext(json_file)[0]
                 
                 results_ru = run_ru_dataset(bino, sample_rate=0.75, data=dataset, max_samples=4000)
@@ -91,7 +85,6 @@ def main():
                 }
                 results_ru['dataset_name'] = dataset_name
                 
-                # Вывод метрик для текущего датасета
                 print(f"\nResults for dataset: {dataset_name}")
                 print("\nOverall Metrics:")
                 print(f"F1 Score: {results_ru['overall_metrics']['f1_score']:.4f}")
@@ -105,7 +98,6 @@ def main():
                 print(f"False Negatives: {len(results_ru['data']['false_negatives'])}")
                 print(f"Errors: {results_ru['data']['error_count']}")
 
-                # Сохраняем результаты для текущего датасета
                 model_name = pair['name'].replace(' ', '_').replace('-', '_').replace('/', '_')
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 output_file_ru = os.path.join(output_dir, f"results_ru_{dataset_name}_{model_name}_{timestamp}.json")
@@ -117,5 +109,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    
