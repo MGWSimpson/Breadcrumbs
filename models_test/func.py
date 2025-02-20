@@ -48,9 +48,6 @@ def run_eng_dataset(bino, sample_rate, max_samples=2000):
         else:
             print(f"{file_name} already exists. Skipping download.")
 
-    #print("List of files:")
-    #print(filenames)
-
     for filename in filenames:
         parquet_file = pq.ParquetFile(filename)
         print()
@@ -91,7 +88,6 @@ def run_eng_dataset(bino, sample_rate, max_samples=2000):
                         sys.stdout.write(f"\rProcessed: {check_counter} items")
                         sys.stdout.flush()
 
-    # Преобразование результатов в pandas DataFrame
     results_data = {
         'text': true_positives + false_positives + true_negatives + false_negatives,
         'pred': [1] * len(true_positives) + [1] * len(false_positives) + 
@@ -101,22 +97,19 @@ def run_eng_dataset(bino, sample_rate, max_samples=2000):
     }
     score_df = pd.DataFrame(results_data)
 
-    # Вычисление метрик
     f1_score = metrics.f1_score(score_df["class"], score_df["pred"])
     fpr, tpr, thresholds = metrics.roc_curve(y_true=score_df["class"], y_score=score_df["pred"], pos_label=1)
     roc_auc = metrics.auc(fpr, tpr)
-    # Интерполяция TPR при FPR = 0.01%
     tpr_at_fpr_0_01 = np.interp(0.01 / 100, fpr, tpr)
     
-    # Расчет дополнительных метрик из confusion matrix
     tn = len(true_negatives)
     fp = len(false_positives)
     fn = len(false_negatives)
     tp = len(true_positives)
     
-    tpr_value = tp / (tp + fn) if (tp + fn) > 0 else 0  # Sensitivity, recall
+    tpr_value = tp / (tp + fn) if (tp + fn) > 0 else 0
     fpr_value = fp / (fp + tn) if (fp + tn) > 0 else 0
-    tnr_value = tn / (tn + fp) if (tn + fp) > 0 else 0  # Specificity
+    tnr_value = tn / (tn + fp) if (tn + fp) > 0 else 0
     fnr_value = fn / (fn + tp) if (fn + tp) > 0 else 0
 
     return {
@@ -176,14 +169,12 @@ def run_ru_dataset(bino, sample_rate, data, max_samples=2000):
                 "class": 1 if actually_ai else 0
             }
 
-            # Инициализируем структуру для нового датасета
             if dataset_name not in dataset_results:
                 dataset_results[dataset_name] = {
                     'true_positives': [], 'false_positives': [],
                     'true_negatives': [], 'false_negatives': []
                 }
 
-            # Распределяем результаты по датасетам
             if predicted_ai and actually_ai:
                 true_positives.append(example_data)
                 dataset_results[dataset_name]['true_positives'].append(example_data)
@@ -202,22 +193,17 @@ def run_ru_dataset(bino, sample_rate, data, max_samples=2000):
                 sys.stdout.write(f"\rProcessed: {check_counter} items")
                 sys.stdout.flush()
 
-    # Измененная функция для подсчета метрик
     def calculate_metrics(tp, fp, tn, fn):
-        # Подсчитываем количество примеров для каждого элемента confusion matrix
         tp_count = len([x['text'] for x in tp])
         fp_count = len([x['text'] for x in fp])
         tn_count = len([x['text'] for x in tn])
         fn_count = len([x['text'] for x in fn])
 
-        # Формируем списки истинных и предсказанных меток
         y_true = [1] * tp_count + [0] * fp_count + [0] * tn_count + [1] * fn_count
         y_pred = [1] * tp_count + [1] * fp_count + [0] * tn_count + [0] * fn_count
 
         metrics_dict = {}
 
-        # Если данные содержат только один класс, ROC AUC и TPR при FPR = 0.01 посчитать нельзя.
-        # В этом случае вычисляем F1 score, используя имеющийся класс как позитивный.
         if len(set(y_true)) < 2:
             unique_class = list(set(y_true))[0]
             f1 = metrics.f1_score(y_true, y_pred, pos_label=unique_class, zero_division=0)
@@ -233,7 +219,6 @@ def run_ru_dataset(bino, sample_rate, data, max_samples=2000):
             metrics_dict['roc_auc'] = roc_auc
             metrics_dict['tpr_at_fpr_0_01'] = tpr_at_fpr
 
-        # Расчет метрик на основе confusion matrix
         tpr_value = tp_count / (tp_count + fn_count) if (tp_count + fn_count) > 0 else 0
         fpr_value = fp_count / (fp_count + tn_count) if (fp_count + tn_count) > 0 else 0
         tnr_value = tn_count / (tn_count + fp_count) if (tn_count + fp_count) > 0 else 0
@@ -246,10 +231,8 @@ def run_ru_dataset(bino, sample_rate, data, max_samples=2000):
 
         return metrics_dict
 
-    # Подсчет общих метрик для всего русского датасета
     overall_metrics = calculate_metrics(true_positives, false_positives, true_negatives, false_negatives)
 
-    # Подсчет метрик для каждого отдельного датасета
     dataset_metrics = {}
     for dataset_name, results in dataset_results.items():
         dataset_metrics[dataset_name] = calculate_metrics(
