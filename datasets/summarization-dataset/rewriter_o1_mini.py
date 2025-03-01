@@ -15,7 +15,7 @@ dp_rewrite = "Ты — помощник, который переписывает
 lp_rewrite = "Ты — помощник, который переписывает текст, сохраняя его структуру и смысл. Замени некоторые слова синонимами и перефразируй предложения, но не сокращай и не добавляй новую информацию. Количество слов в изменённом тексте должно остаться таким же."
 
 
-def generate_paragraph(prompt, rewrite_mode="dp", model="o1-mini"):
+def generate_paragraph(prompt, rewrite_mode="lp", model="o1-mini"):
 
     instruction = dp_rewrite if rewrite_mode == "dp" else lp_rewrite
     full_prompt = f"{instruction}\n\nТекст:\n{prompt}"
@@ -55,7 +55,7 @@ def create_dataset(start_paragraph=0, end_paragraph=10, output_file="dataset.jso
             "id": start_id + (i - start_paragraph),
             "text": text,
             "source": "ai",
-            "dataset": "SM DP chatGPT o1-mini"
+            "dataset": "SM LP chatGPT o1-mini"
         }
         dataset.append(entry)
         
@@ -67,4 +67,4 @@ def create_dataset(start_paragraph=0, end_paragraph=10, output_file="dataset.jso
     print(f"Done! Added {end_paragraph - start_paragraph} new entries to file '{output_file}'.")
 
 if __name__ == "__main__":
-    create_dataset(start_paragraph=5, end_paragraph=100, output_file="small_dataset.json")
+    create_dataset(start_paragraph=0, end_paragraph=50, output_file="rew_from_o1-mini_two_part.json")
