@@ -11,10 +11,10 @@ client = OpenAI(
     base_url="https://api.deepseek.com"
 )
 
-def generate_paragraph(prompt, temperature=0.75):
+def generate_paragraph(prompt, temperature=0.8):
     try:
         completion = client.chat.completions.create(
-            model="deepseek-reasoner",
+            model="deepseek-chat",
             messages=[
                 {"role": "system", "content": "Ты — помощник, который даёт развернутые ответы на русском языке. Пиши одним абзацем без лишних символов и перечислений."},
                 {"role": "user", "content": prompt}
@@ -26,7 +26,6 @@ def generate_paragraph(prompt, temperature=0.75):
     except Exception as e:
         print(f"Error generating paragraph: {e}")
         return ""
-
 
 def append_entry_to_json_array(entry, output_file):
     indent = " " * 4
@@ -81,11 +80,11 @@ def create_dataset(num_paragraphs=10, output_file="dataset.json"):
             "id": start_id + i,
             "text": text,
             "source": "ai",
-            "dataset": "deepseek-r1"
+            "dataset": "deepseek-chat"
         }
         append_entry_to_json_array(entry, output_file)
     
     print(f"Done! Added {num_paragraphs} new entries to '{output_file}'.")
 
 if __name__ == "__main__":
-    create_dataset(num_paragraphs=200, output_file="small_dataset_3.json")
+    create_dataset(num_paragraphs=200, output_file="small_dataset_4.json")
