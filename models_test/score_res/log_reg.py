@@ -11,7 +11,7 @@ import json
 import joblib
 import os
 
-def load_data_from_json(json_path='models_test/score_res/merged_results_no_text.json'):
+def load_data_from_json(json_path='models_test/score_res/mer.json'):
     with open(json_path, 'r') as f:
         data_dict = json.load(f)
     

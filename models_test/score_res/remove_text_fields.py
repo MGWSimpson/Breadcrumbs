@@ -46,8 +46,8 @@ def remove_text_fields(input_file_path, output_file_path=None):
         return False
 
 if __name__ == "__main__":
-    input_file = "merged_results.json"
-    output_file = "merged_results_no_text.json"
+    input_file = "merged_results_three.json"
+    output_file = "merged_results_three_no_text.json"
     
     print("Removing 'text' fields from the merged file...")
     if remove_text_fields(input_file, output_file):

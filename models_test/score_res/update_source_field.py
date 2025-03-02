@@ -158,8 +158,8 @@ def merge_json_files(file1_path, file2_path, output_path):
 
 if __name__ == "__main__":
     files_to_process = [
-        "results_ru_ru_detection_dataset_Pair_1___deepseek_llm_7b_base_and_deepseek_coder_7b_instruct_v1.5_20250228_183100",
-        "results_ru_ru_detection_dataset_Pair_2___deepseek_llm_7b_base_and_deepseek_llm_7b_chat_20250228_190028"
+        "results_ru_ru_detection_dataset_three_Pair_1___deepseek_llm_7b_base_and_deepseek_coder_7b_instruct_v1.5_20250302_113229",
+        "results_ru_ru_detection_dataset_three_Pair_2___deepseek_llm_7b_base_and_deepseek_llm_7b_chat_20250302_114019"
     ]
     
     num_processed = process_files(files_to_process)
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     
     file1 = files_to_process[0] + ".json"
     file2 = files_to_process[1] + ".json"
-    output_file = "merged_results_2.json"
+    output_file = "merged_results_three.json"
     
     print("\nMerging files...")
     if merge_json_files(file1, file2, output_file):
