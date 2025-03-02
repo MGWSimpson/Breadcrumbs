@@ -5,8 +5,13 @@ import os
 import json
 from tqdm import tqdm
 
+api_key = os.getenv("DEEPSEEK_API_KEY_2")
+
+if not api_key:
+    raise ValueError("API ключ не найден. Установите переменную окружения DEEPSEEK_API_KEY_2 или укажите ключ напрямую в коде.")
+
 client = OpenAI(
-    api_key = os.getenv("DEEPSEEK_API_KEY"),
+    api_key = api_key,
     base_url ="https://api.deepseek.com"
 )
 
@@ -14,7 +19,7 @@ dp_rewrite = "Ты — помощник, который переписывает
 lp_rewrite = "Ты — помощник, который переписывает текст, сохраняя его структуру и смысл. Замени некоторые слова синонимами и перефразируй предложения, но не сокращай и не добавляй новую информацию. Количество слов в изменённом тексте должно остаться таким же."
 
 
-def generate_paragraph(prompt, rewrite_mode="lp", model="deepseek-chat"):
+def generate_paragraph(prompt, rewrite_mode="dp", model="deepseek-chat"):
     try:
         instruction = dp_rewrite if rewrite_mode == "dp" else lp_rewrite
         full_prompt = f"{instruction}\n\nТекст:\n{prompt}"
@@ -58,16 +63,17 @@ def create_dataset(start_paragraph=0, end_paragraph=10, output_file="dataset.jso
             "id": start_id + (i - start_paragraph),
             "text": text,
             "source": "ai",
-            "dataset": "SM LP deepseek-chat"
+            "dataset": "SM DP deepseek-chat"
         }
         dataset.append(entry)
         
+        # Write to file after each entry
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(dataset, f, ensure_ascii=False, indent=4)
+        
         time.sleep(0.01)
-    
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(dataset, f, ensure_ascii=False, indent=4)
     
     print(f"Done! Added {end_paragraph - start_paragraph} new entries to file '{output_file}'.")
 
 if __name__ == "__main__":
-    create_dataset(start_paragraph=0, end_paragraph=50, output_file="rew_from_deepseek_chat_lp.json")
+    create_dataset(start_paragraph=0, end_paragraph=400, output_file="rew_from_deepseek_chat_dp.json")

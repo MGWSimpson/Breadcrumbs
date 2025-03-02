@@ -62,12 +62,13 @@ def create_dataset(start_paragraph=0, end_paragraph=10, output_file="dataset.jso
         }
         dataset.append(entry)
         
+        # Write to file after each entry
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(dataset, f, ensure_ascii=False, indent=4)
+        
         time.sleep(0.01)
-    
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(dataset, f, ensure_ascii=False, indent=4)
     
     print(f"Done! Added {end_paragraph - start_paragraph} new entries to file '{output_file}'.")
 
 if __name__ == "__main__":
-    create_dataset(start_paragraph=0, end_paragraph=20, output_file="rew_from_deepseek_r1_dp.json")
+    create_dataset(start_paragraph=20, end_paragraph=400, output_file="rew_from_deepseek_r1_dp.json")

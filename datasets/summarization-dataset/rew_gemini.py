@@ -9,7 +9,7 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 dp_rewrite = "Ты — помощник, который переписывает текст, сохраняя его структуру и смысл. Перепиши следующий текст, значительно изменив структуру, стиль и формулировки. Сохрани основную мысль и фактическое содержание, но переформулируй каждое предложение так, чтобы конечная версия была достаточно отлична от исходной."
 lp_rewrite = "Ты — помощник, который переписывает текст, сохраняя его структуру и смысл. Замени некоторые слова синонимами и перефразируй предложения, но не сокращай и не добавляй новую информацию. Количество слов в изменённом тексте должно остаться таким же."
 
-def generate_paragraph(prompt, rewrite_mode="lp", model="gemini-2.0-flash"):
+def generate_paragraph(prompt, rewrite_mode="dp", model="gemini-2.0-flash"):
     try:
         instruction = dp_rewrite if rewrite_mode == "dp" else lp_rewrite
         full_prompt = f"{instruction}\n\nТекст:\n{prompt}"
@@ -50,16 +50,17 @@ def create_dataset(start_paragraph=0, end_paragraph=10, output_file="dataset.jso
             "id": start_id + (i - start_paragraph),
             "text": text,
             "source": "ai",
-            "dataset": "SM LP gemini-2.0-flash"
+            "dataset": "SM DP gemini-2.0-flash"
         }
         dataset.append(entry)
         
-        time.sleep(1)
-    
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(dataset, f, ensure_ascii=False, indent=4)
+        # Write to file after each entry
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(dataset, f, ensure_ascii=False, indent=4)
+        
+        time.sleep(15)
     
     print(f"Done! Added {end_paragraph - start_paragraph} new entries to file '{output_file}'.")
 
 if __name__ == "__main__":
-    create_dataset(start_paragraph=300, end_paragraph=400, output_file="rew_from_gemini_chat_lp.json")
+    create_dataset(start_paragraph=0, end_paragraph=400, output_file="rew_from_gemini_dp.json")
