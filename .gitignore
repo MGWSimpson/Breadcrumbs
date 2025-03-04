@@ -174,3 +174,5 @@ models/scaler.joblib
 models/nn_model.joblib
 models/scaler_logreg.joblib
 models/scaler_nn.joblib
+models/binary/binary_logreg_model.joblib
+models/binary/binary_scaler.joblib
