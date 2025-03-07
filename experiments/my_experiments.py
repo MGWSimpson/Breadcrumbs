@@ -6,6 +6,7 @@ from binoculars.detector import Binoculars
 from binoculars.detector import BINOCULARS_ACCURACY_THRESHOLD as THRESHOLD
 from experiments.utils import convert_to_pandas, save_experiment
 
+
 import os
 import argparse
 import datetime
@@ -16,6 +17,8 @@ import numpy as np
 from sklearn import metrics
 import pandas as pd
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 class Args:
     batch_size = 32
@@ -63,9 +66,12 @@ def prompt_inclusion_experiment():
     args = Args()
     print("Using device:", "cuda" if torch.cuda.is_available() else "cpu")
 
+    print(torch.cuda.current_device())
+    
+    
     if torch.cuda.is_available():
         print(f"Number of GPUs: {torch.cuda.device_count()}")
-        print(f"GPU Type: {torch.cuda.get_device_name(0)}")
+        print(f"GPU Type: {torch.cuda.get_device_name(1)}")
 
     bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen)
 

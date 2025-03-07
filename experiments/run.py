@@ -101,6 +101,7 @@ if __name__ == "__main__":
 
     print("Using device:", "cuda" if torch.cuda.is_available() else "cpu")
 
+    print(torch.cuda.device)
     if torch.cuda.is_available():
         print(f"Number of GPUs: {torch.cuda.device_count()}")
         print(f"GPU Type: {torch.cuda.get_device_name(0)}")

@@ -20,8 +20,8 @@ huggingface_config = {
 BINOCULARS_ACCURACY_THRESHOLD = 0.9015310749276843  # optimized for f1-score
 BINOCULARS_FPR_THRESHOLD = 0.8536432310785527  # optimized for low-fpr [chosen at 0.01%]
 
-DEVICE_1 = "cuda:0" if torch.cuda.is_available() else "cpu"
-DEVICE_2 = "cuda:1" if torch.cuda.device_count() > 1 else DEVICE_1
+DEVICE_1 = "cuda:0" #if torch.cuda.is_available() else "cpu"
+DEVICE_2 = "cuda:1" 
 
 
 class Binoculars(object):
