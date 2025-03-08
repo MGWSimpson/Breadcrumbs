@@ -21,10 +21,10 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 class Args:
-    batch_size = 32
+    batch_size = 16
     tokens_seen = 512
     job_name= "test"
-    dataset_path = "/content/Binoculars/datasets/robustness/open_orca/default-llama2-13b-chat.jsonl"
+    dataset_path = "datasets/robustness/open_orca/default-llama2-13b-chat.jsonl"
     dataset_name = None
     human_sample_key = 'response'
     machine_sample_key = 'meta-llama-Llama-2-13b-chat-hf_generated_text_wo_prompt'
@@ -43,6 +43,7 @@ def include_prompt_in_dataset(dataset_path, prompt_key, machine_sample_key, huma
     jsonObj[machine_sample_key] = jsonObj[prompt_key] + jsonObj[machine_sample_key]
     jsonObj[human_sample_key] = jsonObj[prompt_key] + jsonObj[machine_sample_key]
     
+    jsonObj = jsonObj[:16]
 
     return Dataset.from_pandas(jsonObj)
 
@@ -78,12 +79,11 @@ def prompt_inclusion_experiment():
     added_prompt_ds = include_prompt_in_dataset(args.dataset_path, args.prompt_key, args.machine_sample_key, args.human_sample_key)
 
     
-    jsonObj = jsonObj[:5]
 
 
     
     regular_json_obj = pd.read_json(path_or_buf=args.dataset_path, lines=True)
-    regular_json_obj = regular_json_obj[:5]
+    regular_json_obj = regular_json_obj[:16]
     regular_ds = Dataset.from_pandas(regular_json_obj)
 
     print(f"Scoring added prompt machine text")
@@ -91,7 +91,8 @@ def prompt_inclusion_experiment():
         lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key])},
         batched=True,
         batch_size=args.batch_size,
-        remove_columns=added_prompt_ds.column_names
+        remove_columns=added_prompt_ds.column_names,
+        desc="Scoring added prompt machine text"
     )
     # TODO: add the scores for the humans too.
 
@@ -101,8 +102,8 @@ def prompt_inclusion_experiment():
         lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key])},
         batched=True,
         batch_size=args.batch_size,
-        remove_columns=regular_ds.column_names
-
+        remove_columns=regular_ds.column_names,
+        desc="Scoring regular machine text"
     )
 
     score_df = convert_to_pandas(machine_added_prompt_scores, machine_regular_scores)
@@ -110,8 +111,6 @@ def prompt_inclusion_experiment():
 
     # TODO: add the experiment saves for 
 
-def wrong_prompt_inclusion_experiment(): 
-    pass
 
 
 
