@@ -77,18 +77,24 @@ class Binoculars(object):
         return encodings
 
     @torch.inference_mode()
-    def _get_logits(self, encodings: transformers.BatchEncoding) -> torch.Tensor:
+    def _get_logits(self, encodings: transformers.BatchEncoding, prompted_encodings: transformers.BatchEncoding) -> torch.Tensor:
         observer_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
-        performer_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
+        performer_logits = self.performer_model(**prompted_encodings.to(DEVICE_2)).logits 
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
         return observer_logits, performer_logits
 
-    def compute_score(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
+    def compute_score(self, input_text: Union[list[str], str], prompted_input_text: Union[list[str], str]) -> Union[float, list[float]]:
         batch = [input_text] if isinstance(input_text, str) else input_text
+        prompt_batch = [prompted_input_text] if isinstance(prompted_input_text, str) else prompted_input_text
+
         encodings = self._tokenize(batch)
-        observer_logits, performer_logits = self._get_logits(encodings)
-        ppl = perplexity(encodings, performer_logits)
+        prompt_encodings = self._tokenize(prompt_batch)
+        observer_logits, performer_logits = self._get_logits(encodings, prompt_encodings)
+       
+
+        performer_logits = performer_logits[:, performer_logits.shape[1] -observer_logits.shape[1]:, :]
+        ppl = perplexity(encodings, performer_logits.to(DEVICE_1))
         x_ppl = entropy(observer_logits.to(DEVICE_1), performer_logits.to(DEVICE_1),
                         encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
         binoculars_scores = ppl / x_ppl

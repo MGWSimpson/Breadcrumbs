@@ -18,10 +18,10 @@ from sklearn import metrics
 import pandas as pd
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,3"
 
 class Args:
-    batch_size = 16
+    batch_size = 1
     tokens_seen = 512
     job_name= "prompt_included"
     dataset_path = "datasets/robustness/open_orca/default-llama2-13b-chat.jsonl"
@@ -41,10 +41,12 @@ class Args:
 
 def include_prompt_in_dataset(dataset_path, prompt_key, machine_sample_key, human_sample_key):
     jsonObj = pd.read_json(path_or_buf=dataset_path, lines=True)
-    jsonObj[machine_sample_key] = jsonObj[prompt_key] + jsonObj[machine_sample_key]
-    jsonObj[human_sample_key] = jsonObj[prompt_key] + jsonObj[machine_sample_key]
-    
+    jsonObj[machine_sample_key] = jsonObj[machine_sample_key]
+    jsonObj[machine_sample_key + "w_prompt"] = jsonObj[prompt_key] + jsonObj[machine_sample_key]
+    jsonObj[human_sample_key] = jsonObj[human_sample_key]
+    jsonObj[ human_sample_key + 'w_prompt'] = jsonObj[prompt_key] + jsonObj[human_sample_key]
 
+    jsonObj = jsonObj[:1024]
     return Dataset.from_pandas(jsonObj)
 
 
@@ -138,7 +140,7 @@ def prompt_inclusion_experiment():
    
     print(f"Scoring added prompt machine text")
     machine_added_prompt_scores = added_prompt_ds.map(
-        lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key])},
+        lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key], batch[args.machine_sample_key + "w_prompt"])},
         batched=True,
         batch_size=args.batch_size,
         remove_columns=added_prompt_ds.column_names,
@@ -146,7 +148,7 @@ def prompt_inclusion_experiment():
     )
     
     human_added_prompt_scores = added_prompt_ds.map(
-        lambda batch: {"score": bino.compute_score(batch[args. human_sample_key])},
+        lambda batch: {"score": bino.compute_score(batch[args. human_sample_key], batch[args. human_sample_key + "w_prompt"])},
         batched=True,
         batch_size=args.batch_size,
         remove_columns=added_prompt_ds.column_names,
