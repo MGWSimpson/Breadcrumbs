@@ -23,13 +23,14 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 class Args:
     batch_size = 16
     tokens_seen = 512
-    job_name= "test"
+    job_name= "prompt_included"
     dataset_path = "datasets/robustness/open_orca/default-llama2-13b-chat.jsonl"
     dataset_name = None
     human_sample_key = 'response'
     machine_sample_key = 'meta-llama-Llama-2-13b-chat-hf_generated_text_wo_prompt'
-    machine_text_source = None
+    experiment_path = f"results/{job_name}"
     prompt_key = 'question'
+    machine_text_source = 'llama-Llama-2-13b-chat'
 
 
 
@@ -43,7 +44,6 @@ def include_prompt_in_dataset(dataset_path, prompt_key, machine_sample_key, huma
     jsonObj[machine_sample_key] = jsonObj[prompt_key] + jsonObj[machine_sample_key]
     jsonObj[human_sample_key] = jsonObj[prompt_key] + jsonObj[machine_sample_key]
     
-    jsonObj = jsonObj[:16]
 
     return Dataset.from_pandas(jsonObj)
 
@@ -63,10 +63,67 @@ def include_wrong_prompt_in_dataset(dataset_path, prompt_key, machine_sample_key
 
 
 
+def compute_metrics_and_save(args, score_df): 
+    score_df["pred"] = np.where(score_df["score"] < THRESHOLD, 1, 0)
+
+    # Compute metrics
+    f1_score = metrics.f1_score(score_df["class"], score_df["pred"])
+    score = -1 * score_df["score"]  # We negative scale the scores to make the class 1 (machine) the positive class
+    fpr, tpr, thresholds = metrics.roc_curve(y_true=score_df["class"], y_score=score, pos_label=1)
+    roc_auc = metrics.auc(fpr, tpr)
+    # Interpolate the TPR at FPR = 0.01%, this is a fixed point in roc curve
+    tpr_at_fpr_0_01 = np.interp(0.01 / 100, fpr, tpr)
+
+    # Save experiment
+    save_experiment(args, score_df, fpr, tpr, f1_score, roc_auc, tpr_at_fpr_0_01)
+
+
+def run_experiment(): 
+    args = Args()
+    os.makedirs(f"{args.experiment_path}", exist_ok=True)
+
+    print("Using device:", "cuda" if torch.cuda.is_available() else "cpu")
+    print(torch.cuda.current_device())
+    
+    
+    if torch.cuda.is_available():
+        print(f"Number of GPUs: {torch.cuda.device_count()}")
+        print(f"GPU Type: {torch.cuda.get_device_name(1)}")
+
+    bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen)
+
+
+    regular_json_obj = pd.read_json(path_or_buf=args.dataset_path, lines=True)
+    regular_ds = Dataset.from_pandas(regular_json_obj)
+
+    print(f"Scoring regular machine text")
+    machine_regular_scores = regular_ds.map(
+        lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key])},
+        batched=True,
+        batch_size=args.batch_size,
+        remove_columns=regular_ds.column_names,
+        desc="Scoring regular machine text"
+    )
+
+    human_regular_scores = regular_ds.map(
+        lambda batch: {"score": bino.compute_score(batch[args. human_sample_key])},
+        batched=True,
+        batch_size=args.batch_size,
+        remove_columns=regular_ds.column_names,
+        desc="Scoring regular human text")
+
+    regular_score_df = convert_to_pandas(human_regular_scores, machine_regular_scores)
+    
+    compute_metrics_and_save(args, regular_score_df)
+
+
+
 def prompt_inclusion_experiment():
     args = Args()
-    print("Using device:", "cuda" if torch.cuda.is_available() else "cpu")
 
+    os.makedirs(f"{args.experiment_path}", exist_ok=True)
+
+    print("Using device:", "cuda" if torch.cuda.is_available() else "cpu")
     print(torch.cuda.current_device())
     
     
@@ -78,14 +135,7 @@ def prompt_inclusion_experiment():
 
     added_prompt_ds = include_prompt_in_dataset(args.dataset_path, args.prompt_key, args.machine_sample_key, args.human_sample_key)
 
-    
-
-
-    
-    regular_json_obj = pd.read_json(path_or_buf=args.dataset_path, lines=True)
-    regular_json_obj = regular_json_obj[:16]
-    regular_ds = Dataset.from_pandas(regular_json_obj)
-
+   
     print(f"Scoring added prompt machine text")
     machine_added_prompt_scores = added_prompt_ds.map(
         lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key])},
@@ -94,22 +144,19 @@ def prompt_inclusion_experiment():
         remove_columns=added_prompt_ds.column_names,
         desc="Scoring added prompt machine text"
     )
-    # TODO: add the scores for the humans too.
-
-
-    print(f"Scoring regular machine text")
-    machine_regular_scores = regular_ds.map(
-        lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key])},
+    
+    human_added_prompt_scores = added_prompt_ds.map(
+        lambda batch: {"score": bino.compute_score(batch[args. human_sample_key])},
         batched=True,
         batch_size=args.batch_size,
-        remove_columns=regular_ds.column_names,
-        desc="Scoring regular machine text"
-    )
+        remove_columns=added_prompt_ds.column_names,
+        desc="Scoring added prompt human text")
 
-    score_df = convert_to_pandas(machine_added_prompt_scores, machine_regular_scores)
-    score_df.to_csv('score_df.csv')
+    added_prompt_score_df = convert_to_pandas(human_added_prompt_scores, machine_added_prompt_scores)
 
-    # TODO: add the experiment saves for 
+    compute_metrics_and_save(args, added_prompt_score_df)
+    
+
 
 
 
