@@ -12,8 +12,8 @@ import numpy as np
 from sklearn import metrics
 
 
-# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "4,5"
 torch.cuda.empty_cache() 
 def main(args):
     # Initialize Binoculars (experiments in paper use the "accuracy" mode threshold wherever applicable)
