@@ -18,10 +18,10 @@ from sklearn import metrics
 import pandas as pd
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "4,1"
 
 class Args:
-    batch_size = 1
+    batch_size = 4
     tokens_seen = 512
     job_name= "prompt_included"
     dataset_path = "datasets/robustness/open_orca/default-llama2-13b-chat.jsonl"
@@ -84,18 +84,17 @@ def run_experiment():
     args = Args()
     os.makedirs(f"{args.experiment_path}", exist_ok=True)
 
-    print("Using device:", "cuda" if torch.cuda.is_available() else "cpu")
-    print(torch.cuda.current_device())
+  
     
     
     if torch.cuda.is_available():
         print(f"Number of GPUs: {torch.cuda.device_count()}")
-        print(f"GPU Type: {torch.cuda.get_device_name(1)}")
 
     bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen)
 
 
     regular_json_obj = pd.read_json(path_or_buf=args.dataset_path, lines=True)
+    # regular_json_obj = regular_json_obj[:1500]
     regular_ds = Dataset.from_pandas(regular_json_obj)
 
     print(f"Scoring regular machine text")
@@ -120,51 +119,11 @@ def run_experiment():
 
 
 
-def prompt_inclusion_experiment():
-    args = Args()
-
-    os.makedirs(f"{args.experiment_path}", exist_ok=True)
-
-    print("Using device:", "cuda" if torch.cuda.is_available() else "cpu")
-    print(torch.cuda.current_device())
-    
-    
-    if torch.cuda.is_available():
-        print(f"Number of GPUs: {torch.cuda.device_count()}")
-        print(f"GPU Type: {torch.cuda.get_device_name(1)}")
-
-    bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen)
-
-    added_prompt_ds = include_prompt_in_dataset(args.dataset_path, args.prompt_key, args.machine_sample_key, args.human_sample_key)
-
-   
-    print(f"Scoring added prompt machine text")
-    machine_added_prompt_scores = added_prompt_ds.map(
-        lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key], batch[args.machine_sample_key + "w_prompt"])},
-        batched=True,
-        batch_size=args.batch_size,
-        remove_columns=added_prompt_ds.column_names,
-        desc="Scoring added prompt machine text"
-    )
-    
-    human_added_prompt_scores = added_prompt_ds.map(
-        lambda batch: {"score": bino.compute_score(batch[args. human_sample_key], batch[args. human_sample_key + "w_prompt"])},
-        batched=True,
-        batch_size=args.batch_size,
-        remove_columns=added_prompt_ds.column_names,
-        desc="Scoring added prompt human text")
-
-    added_prompt_score_df = convert_to_pandas(human_added_prompt_scores, machine_added_prompt_scores)
-
-    compute_metrics_and_save(args, added_prompt_score_df)
-    
-
-
 
 
 
 
 if __name__ == "__main__": 
-    prompt_inclusion_experiment()
+    run_experiment()
 
  

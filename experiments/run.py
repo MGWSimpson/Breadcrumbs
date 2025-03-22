@@ -12,6 +12,9 @@ import numpy as np
 from sklearn import metrics
 
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+torch.cuda.empty_cache() 
 def main(args):
     # Initialize Binoculars (experiments in paper use the "accuracy" mode threshold wherever applicable)
     bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen)
@@ -33,7 +36,6 @@ def main(args):
             or f"{args.dataset_name}-{args.machine_text_source}-{args.tokens_seen}-tokens"
             .strip().replace(' ', '-')
     )
-    breakpoint()
     args.experiment_path = f"results/{args.job_name}"
     os.makedirs(f"{args.experiment_path}", exist_ok=True)
 

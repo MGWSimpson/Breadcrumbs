@@ -20,8 +20,8 @@ huggingface_config = {
 BINOCULARS_ACCURACY_THRESHOLD = 0.9015310749276843  # optimized for f1-score
 BINOCULARS_FPR_THRESHOLD = 0.8536432310785527  # optimized for low-fpr [chosen at 0.01%]
 
-DEVICE_1 = "cuda:0" #if torch.cuda.is_available() else "cpu"
-DEVICE_2 = "cuda:1" 
+DEVICE_1 = "cuda:0" #  if torch.cuda.is_available() else "cpu"
+DEVICE_2 = "cuda:1" #  if torch.cuda.device_count() > 1 else DEVICE_1
 
 
 class Binoculars(object):
@@ -40,7 +40,9 @@ class Binoculars(object):
                                                                    trust_remote_code=True,
                                                                    torch_dtype=torch.bfloat16 if use_bfloat16
                                                                    else torch.float32,
-                                                                   token=huggingface_config["TOKEN"]
+                                                                   token=huggingface_config["TOKEN"],
+                                                                   output_hidden_states=True
+
                                                                    )
         self.performer_model = AutoModelForCausalLM.from_pretrained(performer_name_or_path,
                                                                     device_map={"": DEVICE_2},
@@ -77,24 +79,22 @@ class Binoculars(object):
         return encodings
 
     @torch.inference_mode()
-    def _get_logits(self, encodings: transformers.BatchEncoding, prompted_encodings: transformers.BatchEncoding) -> torch.Tensor:
-        observer_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
-        performer_logits = self.performer_model(**prompted_encodings.to(DEVICE_2)).logits 
+    def _get_logits(self, encodings: transformers.BatchEncoding) -> torch.Tensor:
+        observer_output = self.observer_model(**encodings.to(DEVICE_1))
+        intermediate = observer_output.hidden_states[16]
+        observer_logits = observer_output.logits
+        performer_logits = self.performer_model(inputs_embeds=intermediate.to(DEVICE_2)).logits
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
         return observer_logits, performer_logits
 
-    def compute_score(self, input_text: Union[list[str], str], prompted_input_text: Union[list[str], str]) -> Union[float, list[float]]:
+    def compute_score(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
         batch = [input_text] if isinstance(input_text, str) else input_text
-        prompt_batch = [prompted_input_text] if isinstance(prompted_input_text, str) else prompted_input_text
-
         encodings = self._tokenize(batch)
-        prompt_encodings = self._tokenize(prompt_batch)
-        observer_logits, performer_logits = self._get_logits(encodings, prompt_encodings)
-       
-
-        performer_logits = performer_logits[:, performer_logits.shape[1] -observer_logits.shape[1]:, :]
-        ppl = perplexity(encodings, performer_logits.to(DEVICE_1))
+        observer_logits, performer_logits = self._get_logits(encodings)
+        encodings = encodings.to(DEVICE_1)
+        performer_logits = performer_logits.to(DEVICE_1)
+        ppl = perplexity(encodings, performer_logits)
         x_ppl = entropy(observer_logits.to(DEVICE_1), performer_logits.to(DEVICE_1),
                         encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
         binoculars_scores = ppl / x_ppl
