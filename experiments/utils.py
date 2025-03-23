@@ -34,11 +34,32 @@ def save_json(data, save_path):
         json.dump(data.__dict__, f, ensure_ascii=False, indent=4)
 
 
-
+"""
+ df = pd.DataFrame(
+        {"score": human_scores + machine_scores, "class": [0] * len(human_scores) + [1] * len(machine_scores)}
+    )
+"""
 
 def scatter_plot_save(args, score_df): 
-    pass
+    
 
+    sns.scatterplot(
+        data=score_df,
+        y="score",
+        x=[0]*len(score_df),  # no x-axis meaning, all scores aligned
+        hue="class",
+        palette="Set2",
+        alpha=0.7,
+    )
+
+    plt.xticks([])
+    plt.xlabel("")
+    plt.ylabel("Score")
+    plt.title("Score Distribution Colored by True Class")
+    plt.legend(title="Class", labels=["Human (0)", "Machine (1)"])
+    plt.grid(True, axis='y', linestyle='--', alpha=0.4)
+    plt.tight_layout()
+    plt.savefig(f"{args.experiment_path}/scores.png", bbox_inches='tight')
 
 
 
@@ -53,4 +74,5 @@ def save_experiment(args, score_df, fpr, tpr, f1_score, roc_auc, tpr_at_fpr_0_01
 
     fig.savefig(f"{args.experiment_path}/performance.png", bbox_inches='tight')
     score_df.to_csv(f"{args.experiment_path}/score_df.csv", index=False)
+    scatter_plot_save(args, score_df)
     save_json(args, args.experiment_path)

@@ -29,6 +29,7 @@ def enable_mc_dropout(model):
     for module in model.modules():
         if module.__class__.__name__.startswith('Dropout'):
             module.train()
+            module.p = 0.3
 
 
 class Binoculars(object):
@@ -119,7 +120,7 @@ class Binoculars(object):
         ppl = perplexity(encodings, performer_logits)
         enable_mc_dropout(self.performer_model)
         
-        n_samples = 10
+        n_samples = 5 
         preds = []
         for _ in range(n_samples):
             outputs = self.performer_model(**encodings).logits
