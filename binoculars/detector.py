@@ -21,7 +21,14 @@ BINOCULARS_ACCURACY_THRESHOLD = 0.9015310749276843  # optimized for f1-score
 BINOCULARS_FPR_THRESHOLD = 0.8536432310785527  # optimized for low-fpr [chosen at 0.01%]
 
 DEVICE_1 = "cuda:0" #  if torch.cuda.is_available() else "cpu"
-DEVICE_2 = "cuda:1" #  if torch.cuda.device_count() > 1 else DEVICE_1
+DEVICE_2 = "cuda:0" #  if torch.cuda.device_count() > 1 else DEVICE_1
+
+
+
+def enable_mc_dropout(model):
+    for module in model.modules():
+        if module.__class__.__name__.startswith('Dropout'):
+            module.train()
 
 
 class Binoculars(object):
@@ -35,7 +42,7 @@ class Binoculars(object):
         assert_tokenizer_consistency(observer_name_or_path, performer_name_or_path)
 
         self.change_mode(mode)
-        self.observer_model = AutoModelForCausalLM.from_pretrained(observer_name_or_path,
+        """self.observer_model = AutoModelForCausalLM.from_pretrained(observer_name_or_path,
                                                                    device_map={"": DEVICE_1},
                                                                    trust_remote_code=True,
                                                                    torch_dtype=torch.bfloat16 if use_bfloat16
@@ -43,7 +50,7 @@ class Binoculars(object):
                                                                    token=huggingface_config["TOKEN"],
                                                                    output_hidden_states=True
 
-                                                                   )
+                                                                   )"""
         self.performer_model = AutoModelForCausalLM.from_pretrained(performer_name_or_path,
                                                                     device_map={"": DEVICE_2},
                                                                     trust_remote_code=True,
@@ -51,7 +58,8 @@ class Binoculars(object):
                                                                     else torch.float32,
                                                                     token=huggingface_config["TOKEN"]
                                                                     )
-        self.observer_model.eval()
+        
+        #self.observer_model.eval()
         self.performer_model.eval()
 
         self.tokenizer = AutoTokenizer.from_pretrained(observer_name_or_path)
@@ -75,7 +83,7 @@ class Binoculars(object):
             padding="longest" if batch_size > 1 else False,
             truncation=True,
             max_length=self.max_token_observed,
-            return_token_type_ids=False).to(self.observer_model.device)
+            return_token_type_ids=False).to(self.performer_model.device)
         return encodings
 
     @torch.inference_mode()
@@ -88,7 +96,7 @@ class Binoculars(object):
             torch.cuda.synchronize()
         return observer_logits, performer_logits
 
-    def compute_score(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
+    def compute_score_(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
         batch = [input_text] if isinstance(input_text, str) else input_text
         encodings = self._tokenize(batch)
         observer_logits, performer_logits = self._get_logits(encodings)
@@ -98,8 +106,38 @@ class Binoculars(object):
         x_ppl = entropy(observer_logits.to(DEVICE_1), performer_logits.to(DEVICE_1),
                         encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
         binoculars_scores = ppl / x_ppl
+       
+
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
+
+    def compute_score(self, input_text):
+        batch = [input_text] if isinstance(input_text, str) else input_text
+        encodings = self._tokenize(batch)
+        self.performer_model.eval()
+        performer_logits = self.performer_model(**encodings.to(DEVICE_1)).logits
+        ppl = perplexity(encodings, performer_logits)
+        enable_mc_dropout(self.performer_model)
+        
+        n_samples = 10
+        preds = []
+        for _ in range(n_samples):
+            outputs = self.performer_model(**encodings).logits
+            preds.append(outputs)
+
+        ce_values = []
+        for pred in preds:
+            ce = entropy(performer_logits, pred, encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
+            ce_values.append(ce)
+
+        print(ce_values)
+        bottom = sum(ce_values) / len(ce_values)
+        
+        binoculars_scores = ppl / bottom
+
+        binoculars_scores = binoculars_scores.tolist()
+        return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
+
 
     def predict(self, input_text: Union[list[str], str]) -> Union[list[str], str]:
         binoculars_scores = np.array(self.compute_score(input_text))

@@ -18,7 +18,7 @@ from sklearn import metrics
 import pandas as pd
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 class Args:
     batch_size = 4
@@ -80,6 +80,8 @@ def compute_metrics_and_save(args, score_df):
     save_experiment(args, score_df, fpr, tpr, f1_score, roc_auc, tpr_at_fpr_0_01)
 
 
+
+
 def run_experiment(): 
     args = Args()
     os.makedirs(f"{args.experiment_path}", exist_ok=True)
@@ -94,9 +96,10 @@ def run_experiment():
 
 
     regular_json_obj = pd.read_json(path_or_buf=args.dataset_path, lines=True)
-    # regular_json_obj = regular_json_obj[:1500]
+    regular_json_obj = regular_json_obj[:100]
     regular_ds = Dataset.from_pandas(regular_json_obj)
 
+    # breakpoint()
     print(f"Scoring regular machine text")
     machine_regular_scores = regular_ds.map(
         lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key])},

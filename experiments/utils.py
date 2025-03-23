@@ -34,6 +34,14 @@ def save_json(data, save_path):
         json.dump(data.__dict__, f, ensure_ascii=False, indent=4)
 
 
+
+
+def scatter_plot_save(args, score_df): 
+    pass
+
+
+
+
 def save_experiment(args, score_df, fpr, tpr, f1_score, roc_auc, tpr_at_fpr_0_01):
     fig, ax = plt.subplots(1, 1)
     ax.set_xscale("log")
