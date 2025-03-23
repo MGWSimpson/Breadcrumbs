@@ -27,10 +27,14 @@ DEVICE_2 = "cuda:0" #  if torch.cuda.device_count() > 1 else DEVICE_1
 
 def enable_mc_dropout(model):
     for module in model.modules():
+        print(module)
         if module.__class__.__name__.startswith('Dropout'):
             module.train()
-            module.p = 0.35
-
+            module.p=0.15
+        
+        if module.__class__.__name__.startswith('FalconAttention'):
+            module.train()
+            module.attention_dropout.p= 0.1
 
 class Binoculars(object):
     def __init__(self,
@@ -121,14 +125,16 @@ class Binoculars(object):
         enable_mc_dropout(self.performer_model)
         
         n_samples =5
-        preds = []
+        
+        running_total = torch.zeros((performer_logits.shape), device=DEVICE_1)
         for _ in range(n_samples):
             outputs = self.performer_model(**encodings).logits
-            preds.append(outputs)
+            running_total += outputs 
+
         
-        preds = torch.stack(preds)
-        mean_pred = preds.mean(axis=-1)
-        entropy = entropy(mean_pred.to(DEVICE_1), performer_logits.to(DEVICE_1),
+        running_total /= 4
+        
+        bottom = entropy(running_total.to(DEVICE_1), performer_logits.to(DEVICE_1),
                         encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
         """
         ce_values = []
@@ -141,7 +147,7 @@ class Binoculars(object):
         
 
 
-        binoculars_scores = ppl / entropy
+        binoculars_scores = ppl / bottom
 
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
