@@ -7,6 +7,7 @@ import matplotlib as mpl
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import metrics
+import numpy as np
 
 COLOR = "black"
 
@@ -43,23 +44,28 @@ def save_json(data, save_path):
 def scatter_plot_save(args, score_df): 
     
 
+    score_df["x"] = np.random.normal(loc=0, scale=0.1, size=len(score_df))
+
+    # Plot
+    plt.figure(figsize=(4, 8))
     sns.scatterplot(
         data=score_df,
+        x="x",
         y="score",
-        x=[0]*len(score_df),  # no x-axis meaning, all scores aligned
         hue="class",
         palette="Set2",
         alpha=0.7,
+        edgecolor="white"
     )
 
     plt.xticks([])
     plt.xlabel("")
     plt.ylabel("Score")
-    plt.title("Score Distribution Colored by True Class")
+    plt.title("Score Distribution by True Class")
     plt.legend(title="Class", labels=["Human (0)", "Machine (1)"])
-    plt.grid(True, axis='y', linestyle='--', alpha=0.4)
+    plt.grid(True, axis="y", linestyle="--", alpha=0.4)
     plt.tight_layout()
-    plt.savefig(f"{args.experiment_path}/scores.png", bbox_inches='tight')
+    plt.savefig(f"{args.experiment_path}/score.png", bbox_inches='tight')
 
 
 

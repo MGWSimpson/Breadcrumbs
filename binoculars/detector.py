@@ -29,7 +29,7 @@ def enable_mc_dropout(model):
     for module in model.modules():
         if module.__class__.__name__.startswith('Dropout'):
             module.train()
-            module.p = 0.3
+            module.p = 0.35
 
 
 class Binoculars(object):
@@ -120,21 +120,28 @@ class Binoculars(object):
         ppl = perplexity(encodings, performer_logits)
         enable_mc_dropout(self.performer_model)
         
-        n_samples = 5 
+        n_samples =5
         preds = []
         for _ in range(n_samples):
             outputs = self.performer_model(**encodings).logits
             preds.append(outputs)
-
+        
+        preds = torch.stack(preds)
+        mean_pred = preds.mean(axis=-1)
+        entropy = entropy(mean_pred.to(DEVICE_1), performer_logits.to(DEVICE_1),
+                        encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
+        """
         ce_values = []
         for pred in preds:
             ce = entropy(performer_logits, pred, encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
-            ce_values.append(ce)
+            ce_values.append(ce)"""
 
-        print(ce_values)
-        bottom = sum(ce_values) / len(ce_values)
+        # print(ce_values)
+        # bottom = sum(ce_values) / len(ce_values)
         
-        binoculars_scores = ppl / bottom
+
+
+        binoculars_scores = ppl / entropy
 
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
