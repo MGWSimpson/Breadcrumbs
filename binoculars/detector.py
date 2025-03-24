@@ -92,7 +92,24 @@ class Binoculars(object):
             torch.cuda.synchronize()
         return observer_logits, performer_logits
 
-    def compute_score(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
+
+    @torch.inference_mode()
+    def _get_ensembled_logits(self, encodings: transformers.BatchEncoding) -> torch.Tensor:
+        n_samples = 5
+        logits = []
+        for _ in range(n_samples):
+            sample_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
+            logits.append(sample_logits)
+
+
+        performer_logits = torch.mean(torch.stack(logits), dim=0)
+        observer_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
+
+        if DEVICE_1 != "cpu":
+            torch.cuda.synchronize()
+        return observer_logits, performer_logits
+
+    def compute_score__(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
         batch = [input_text] if isinstance(input_text, str) else input_text
         encodings = self._tokenize(batch)
         observer_logits, performer_logits = self._get_logits(encodings)
@@ -106,6 +123,28 @@ class Binoculars(object):
 
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
+    
+    """
+    Multi-GPU method.
+    Will take an ensemble of the performers logits to better estimate it.
+    Similar to MOSAIC.
+    """
+    def compute_score(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
+        batch = [input_text] if isinstance(input_text, str) else input_text
+        encodings = self._tokenize(batch)
+        
+        observer_logits, performer_logits = self._get_ensembled_logits(encodings)
+        encodings = encodings.to(DEVICE_1)
+        performer_logits = performer_logits.to(DEVICE_1)
+        ppl = perplexity(encodings, performer_logits)
+        x_ppl = entropy(observer_logits.to(DEVICE_1), performer_logits.to(DEVICE_1),
+                        encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
+        binoculars_scores = ppl / x_ppl
+       
+
+        binoculars_scores = binoculars_scores.tolist()
+        return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
+    
 
     def compute_score_(self, input_text):
         batch = [input_text] if isinstance(input_text, str) else input_text
