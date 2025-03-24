@@ -42,8 +42,9 @@ class Binoculars(object):
                                                                    torch_dtype=torch.bfloat16 if use_bfloat16
                                                                    else torch.float32,
                                                                    token=huggingface_config["TOKEN"],
-                                                                   output_hidden_states=True
-
+                                                                   output_hidden_states=True,
+                                                                    hidden_dropout=0.1,
+                                                                    attention_dropout= 0.1
                                                                    )
         self.performer_model = AutoModelForCausalLM.from_pretrained(performer_name_or_path,
                                                                     device_map={"": DEVICE_2},
@@ -51,8 +52,6 @@ class Binoculars(object):
                                                                     torch_dtype=torch.bfloat16 if use_bfloat16
                                                                     else torch.float32,
                                                                     token=huggingface_config["TOKEN"],
-                                                                    hidden_dropout=0.15,
-                                                                    attention_dropout= 0.15
                                                                     )
         
         self.observer_model.eval()
@@ -97,19 +96,18 @@ class Binoculars(object):
     def _get_ensembled_logits(self, encodings: transformers.BatchEncoding) -> torch.Tensor:
         n_samples = 5
         logits = []
-        self.performer_model.train()
+        self.observer_model.train()
         for _ in range(n_samples):
-            sample_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
+            sample_logits = self.observer_model(**encodings.to(DEVICE_2)).logits
             logits.append(sample_logits)
 
 
 
-        self.performer_model.eval()
+        self.observer_model.eval()
 
-        performer_logits = torch.mean(torch.stack(logits), dim=0)
+        observer_logits = torch.mean(torch.stack(logits), dim=0)
         
-        
-        observer_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
+        performer_logits = self.performer_model(**encodings.to(DEVICE_1)).logits
 
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
