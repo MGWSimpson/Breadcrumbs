@@ -43,8 +43,8 @@ class Binoculars(object):
                                                                    else torch.float32,
                                                                    token=huggingface_config["TOKEN"],
                                                                    output_hidden_states=True,
-                                                                    hidden_dropout=0.1,
-                                                                    attention_dropout= 0.1
+                                                                    hidden_dropout=0.05,
+                                                                    attention_dropout= 0.05
                                                                    )
         self.performer_model = AutoModelForCausalLM.from_pretrained(performer_name_or_path,
                                                                     device_map={"": DEVICE_2},
@@ -94,7 +94,7 @@ class Binoculars(object):
 
     @torch.inference_mode()
     def _get_ensembled_logits(self, encodings: transformers.BatchEncoding) -> torch.Tensor:
-        n_samples = 5
+        n_samples = 6
         logits = []
         self.observer_model.train()
         for _ in range(n_samples):
