@@ -17,7 +17,7 @@ huggingface_config = {
 }
 
 # selected using Falcon-7B and Falcon-7B-Instruct at bfloat16
-BINOCULARS_ACCURACY_THRESHOLD = 0.6315310749276843  # optimized for f1-score
+BINOCULARS_ACCURACY_THRESHOLD = 0.9015310749276843  # optimized for f1-score
 BINOCULARS_FPR_THRESHOLD = 0.8536432310785527  # optimized for low-fpr [chosen at 0.01%]
 
 DEVICE_1 = "cuda:0" #  if torch.cuda.is_available() else "cpu"
@@ -51,8 +51,8 @@ class Binoculars(object):
                                                                     torch_dtype=torch.bfloat16 if use_bfloat16
                                                                     else torch.float32,
                                                                     token=huggingface_config["TOKEN"],
-                                                                    hidden_dropout=0.1,
-                                                                    attention_dropout= 0.1
+                                                                    hidden_dropout=0.15,
+                                                                    attention_dropout= 0.15
                                                                     )
         
         self.observer_model.eval()
@@ -97,12 +97,18 @@ class Binoculars(object):
     def _get_ensembled_logits(self, encodings: transformers.BatchEncoding) -> torch.Tensor:
         n_samples = 5
         logits = []
+        self.performer_model.train()
         for _ in range(n_samples):
             sample_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
             logits.append(sample_logits)
 
 
+
+        self.performer_model.eval()
+
         performer_logits = torch.mean(torch.stack(logits), dim=0)
+        
+        
         observer_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
 
         if DEVICE_1 != "cpu":
