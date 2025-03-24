@@ -17,7 +17,7 @@ huggingface_config = {
 }
 
 # selected using Falcon-7B and Falcon-7B-Instruct at bfloat16
-BINOCULARS_ACCURACY_THRESHOLD = 0.6315310749276843  # optimized for f1-score
+BINOCULARS_ACCURACY_THRESHOLD = 0.8015310749276843  # optimized for f1-score
 BINOCULARS_FPR_THRESHOLD = 0.8536432310785527  # optimized for low-fpr [chosen at 0.01%]
 
 DEVICE_1 = "cuda:0" #  if torch.cuda.is_available() else "cpu"
@@ -36,7 +36,7 @@ class Binoculars(object):
 
         self.change_mode(mode)
         self.observer_model = AutoModelForCausalLM.from_pretrained(observer_name_or_path,
-                                                                   device_map={"": 'cpu'},
+                                                                   device_map={"": DEVICE_2},
                                                                    trust_remote_code=True,
                                                                    torch_dtype=torch.bfloat16 if use_bfloat16
                                                                    else torch.float32,
@@ -45,19 +45,20 @@ class Binoculars(object):
                                                                    )
         
         self.performer_model = AutoModelForCausalLM.from_pretrained(performer_name_or_path,
-                                                                    device_map={"": DEVICE_2},
+                                                                    device_map={"": 'cpu'},
                                                                     trust_remote_code=True,
                                                                     torch_dtype=torch.bfloat16 if use_bfloat16
                                                                     else torch.float32,
                                                                     token=huggingface_config["TOKEN"],
+                                                                    output_hidden_states=True,
                                                                     )
         
 
         self.observer_lm_head = self.observer_model.lm_head.to(DEVICE_2)
         self.performer_lm_head = self.performer_model.lm_head.to(DEVICE_2)
 
-        # self.observer_model.eval()
-        self.performer_model.eval()
+        self.observer_model.eval()
+        # self.performer_model.eval()
 
         self.tokenizer = AutoTokenizer.from_pretrained(performer_name_or_path)
         if not self.tokenizer.pad_token:
@@ -111,27 +112,20 @@ class Binoculars(object):
     def compute_score(self, input_text):
         batch = [input_text] if isinstance(input_text, str) else input_text
         encodings = self._tokenize(batch)
-        self.performer_model.eval()
-        performer_logits = self.performer_model(**encodings.to(DEVICE_1)).logits
+        self.observer_model.eval()
+        last_hidden_state = self.observer_model(**encodings.to(DEVICE_1)).hidden_states[-1]
+
+        performer_logits = self.performer_lm_head(last_hidden_state)
+        observer_logits = self.observer_lm_head(last_hidden_state)
         
     
-        # self.performer_model.train()
-        # logs = []
         
-        #for _ in range( 1):
-        #    logits = self.performer_model(**encodings.to(DEVICE_1)).logits
-        #    logs.append(logits )
-        
-
-
-        #logs = torch .stack(logs)
-        #logs = logs.mean(dim=0)
 
         ppl = perplexity(encodings, performer_logits)
-        x_ppl = entropy(performer_logits.to(DEVICE_1), performer_logits.to(DEVICE_1),
+        x_ppl = entropy(observer_logits.to(DEVICE_1), performer_logits.to(DEVICE_1),
                        encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
         
-        binoculars_scores = ppl  
+        binoculars_scores = ppl / x_ppl
 
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
