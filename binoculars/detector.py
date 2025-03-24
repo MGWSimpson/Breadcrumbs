@@ -35,25 +35,27 @@ class Binoculars(object):
         assert_tokenizer_consistency(observer_name_or_path, performer_name_or_path)
 
         self.change_mode(mode)
-        """self.observer_model = AutoModelForCausalLM.from_pretrained(observer_name_or_path,
-                                                                   device_map={"": DEVICE_1},
+        self.observer_model = AutoModelForCausalLM.from_pretrained(observer_name_or_path,
+                                                                   device_map={"": 'cpu'},
                                                                    trust_remote_code=True,
                                                                    torch_dtype=torch.bfloat16 if use_bfloat16
                                                                    else torch.float32,
                                                                    token=huggingface_config["TOKEN"],
                                                                    output_hidden_states=True
-
-                                                                   )"""
+                                                                   )
+        
         self.performer_model = AutoModelForCausalLM.from_pretrained(performer_name_or_path,
                                                                     device_map={"": DEVICE_2},
                                                                     trust_remote_code=True,
                                                                     torch_dtype=torch.bfloat16 if use_bfloat16
                                                                     else torch.float32,
                                                                     token=huggingface_config["TOKEN"],
-                                                                    hidden_dropout=0.2,
-                                                                    attention_dropout= 0.2
                                                                     )
         
+
+        self.observer_lm_head = self.observer_model.lm_head.to(DEVICE_2)
+        self.performer_lm_head = self.performer_model.lm_head.to(DEVICE_2)
+
         # self.observer_model.eval()
         self.performer_model.eval()
 
@@ -113,26 +115,23 @@ class Binoculars(object):
         performer_logits = self.performer_model(**encodings.to(DEVICE_1)).logits
         
     
-        self.performer_model.train()
-        logs = []
+        # self.performer_model.train()
+        # logs = []
         
-        for _ in range(5):
-            logits = self.performer_model(**encodings.to(DEVICE_1)).logits
-            logs.append(logits )
+        #for _ in range( 1):
+        #    logits = self.performer_model(**encodings.to(DEVICE_1)).logits
+        #    logs.append(logits )
         
 
 
-        logs = torch .stack(logs)
-        
-        logs = logs.mean(dim=0)
-    
-    
+        #logs = torch .stack(logs)
+        #logs = logs.mean(dim=0)
+
         ppl = perplexity(encodings, performer_logits)
-
-        x_ppl = entropy(performer_logits.to(DEVICE_1), logs.to(DEVICE_1),
-                        encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
+        x_ppl = entropy(performer_logits.to(DEVICE_1), performer_logits.to(DEVICE_1),
+                       encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
         
-        binoculars_scores = ppl / x_ppl
+        binoculars_scores = ppl  
 
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores

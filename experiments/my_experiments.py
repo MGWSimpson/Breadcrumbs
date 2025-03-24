@@ -46,7 +46,7 @@ def include_prompt_in_dataset(dataset_path, prompt_key, machine_sample_key, huma
     jsonObj[human_sample_key] = jsonObj[human_sample_key]
     jsonObj[ human_sample_key + 'w_prompt'] = jsonObj[prompt_key] + jsonObj[human_sample_key]
 
-    jsonObj = jsonObj[:1024]
+    jsonObj = jsonObj[:200]
     return Dataset.from_pandas(jsonObj)
 
 
@@ -120,6 +120,40 @@ def run_experiment():
     
     compute_metrics_and_save(args, regular_score_df)
 
+
+def prompt_inclusion_experiment():
+    args = Args()
+
+    os.makedirs(f"{args.experiment_path}", exist_ok=True)
+
+    print("Using device:", "cuda" if torch.cuda.is_available() else "cpu")
+    print(torch.cuda.current_device())
+    
+   
+    bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen)
+
+    added_prompt_ds = include_prompt_in_dataset(args.dataset_path, args.prompt_key, args.machine_sample_key, args.human_sample_key)
+
+   
+    print(f"Scoring added prompt machine text")
+    machine_added_prompt_scores = added_prompt_ds.map(
+        lambda batch: {"score": bino.compute_score(batch[args.machine_sample_key + "w_prompt"])},
+        batched=True,
+        batch_size=args.batch_size,
+        remove_columns=added_prompt_ds.column_names,
+        desc="Scoring added prompt machine text"
+    )
+    
+    human_added_prompt_scores = added_prompt_ds.map(
+        lambda batch: {"score": bino.compute_score(batch[args. human_sample_key + "w_prompt"])},
+        batched=True,
+        batch_size=args.batch_size,
+        remove_columns=added_prompt_ds.column_names,
+        desc="Scoring added prompt human text")
+
+    added_prompt_score_df = convert_to_pandas(human_added_prompt_scores, machine_added_prompt_scores)
+
+    compute_metrics_and_save(args, added_prompt_score_df)
 
 
 
