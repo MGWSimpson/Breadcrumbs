@@ -96,7 +96,7 @@ def run_experiment():
 
 
     regular_json_obj = pd.read_json(path_or_buf=args.dataset_path, lines=True)
-    regular_json_obj = regular_json_obj[:50]
+    regular_json_obj = regular_json_obj[:500]
     regular_ds = Dataset.from_pandas(regular_json_obj)
 
     # breakpoint()

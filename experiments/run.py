@@ -13,8 +13,8 @@ from sklearn import metrics
 
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5"
-torch.cuda.empty_cache() 
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 def main(args):
     # Initialize Binoculars (experiments in paper use the "accuracy" mode threshold wherever applicable)
     bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen)
