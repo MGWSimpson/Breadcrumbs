@@ -17,29 +17,28 @@ huggingface_config = {
 }
 
 # selected using Falcon-7B and Falcon-7B-Instruct at bfloat16
-BINOCULARS_ACCURACY_THRESHOLD = 0.9015310749276843  # optimized for f1-score
+BINOCULARS_ACCURACY_THRESHOLD = 0.6015310749276843  # optimized for f1-score
 BINOCULARS_FPR_THRESHOLD = 0.8536432310785527  # optimized for low-fpr [chosen at 0.01%]
 
 DEVICE_1 = "cuda:0" #  if torch.cuda.is_available() else "cpu"
 DEVICE_2 = "cuda:0" #  if torch.cuda.device_count() > 1 else DEVICE_1
 
 
-
 def enable_mc_dropout(model):
     for module in model.modules():
-        print(module)
         if module.__class__.__name__.startswith('Dropout'):
             module.train()
-            module.p=0.15
-        
+            module.p=0.2
+
         if module.__class__.__name__.startswith('FalconAttention'):
-            module.train()
-            module.attention_dropout.p= 0.1
+            # module.train()
+            # module.attention_dropout.p= 0.2 
+            pass
 
 class Binoculars(object):
     def __init__(self,
                  observer_name_or_path: str = "tiiuae/falcon-7b",
-                 performer_name_or_path: str = "tiiuae/falcon-7b-instruct",
+                 performer_name_or_path: str = "tiiuae/falcon-7b",
                  use_bfloat16: bool = True,
                  max_token_observed: int = 512,
                  mode: str = "low-fpr",
@@ -61,7 +60,9 @@ class Binoculars(object):
                                                                     trust_remote_code=True,
                                                                     torch_dtype=torch.bfloat16 if use_bfloat16
                                                                     else torch.float32,
-                                                                    token=huggingface_config["TOKEN"]
+                                                                    token=huggingface_config["TOKEN"],
+                                                                    attention_dropout=0.3,
+                                                                    hidden_dropout=0.3,
                                                                     )
         
         #self.observer_model.eval()
@@ -124,30 +125,22 @@ class Binoculars(object):
         ppl = perplexity(encodings, performer_logits)
         enable_mc_dropout(self.performer_model)
         
-        n_samples =5
-        
-        running_total = torch.zeros((performer_logits.shape), device=DEVICE_1)
-        for _ in range(n_samples):
-            outputs = self.performer_model(**encodings).logits
-            running_total += outputs 
+    
+        self.performer_model.train()
+        pred = []
+        #for _ in range(5):
+        logits = self.performer_model(**encodings.to(DEVICE_1)).logits
+        pred.append(logits)
 
-        
-        running_total /= 4
-        
-        bottom = entropy(running_total.to(DEVICE_1), performer_logits.to(DEVICE_1),
+        # pred = torch.stack(pred)
+        #pred = pred.mean(dim=0)
+
+        # pred = self.performer_model(**encodings.to(DEVICE_1)).logits
+        pred = pred[0]
+        x_ppl = entropy(performer_logits.to(DEVICE_1), pred.to(DEVICE_1),
                         encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
-        """
-        ce_values = []
-        for pred in preds:
-            ce = entropy(performer_logits, pred, encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
-            ce_values.append(ce)"""
-
-        # print(ce_values)
-        # bottom = sum(ce_values) / len(ce_values)
         
-
-
-        binoculars_scores = ppl / bottom
+        binoculars_scores = ppl / x_ppl
 
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
