@@ -21,7 +21,7 @@ BINOCULARS_ACCURACY_THRESHOLD = 0.9015310749276843  # optimized for f1-score
 BINOCULARS_FPR_THRESHOLD = 0.8536432310785527  # optimized for low-fpr [chosen at 0.01%]
 
 DEVICE_1 = "cuda:0" #  if torch.cuda.is_available() else "cpu"
-DEVICE_2 = "cuda:0" #  if torch.cuda.device_count() > 1 else DEVICE_1
+DEVICE_2 = "cuda:1" #  if torch.cuda.device_count() > 1 else DEVICE_1
 
 
 
@@ -83,10 +83,8 @@ class Binoculars(object):
 
     @torch.inference_mode()
     def _get_logits(self, encodings: transformers.BatchEncoding) -> torch.Tensor:
-        observer_output = self.observer_model(**encodings.to(DEVICE_1))
-        intermediate = observer_output.hidden_states[16]
-        observer_logits = observer_output.logits
-        performer_logits = self.performer_model(inputs_embeds=intermediate.to(DEVICE_2)).logits
+        observer_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
+        performer_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
         return observer_logits, performer_logits
@@ -98,36 +96,33 @@ class Binoculars(object):
         logits = []
         self.observer_model.train()
         for _ in range(n_samples):
-            sample_logits = self.observer_model(**encodings.to(DEVICE_2)).logits
+            sample_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
             logits.append(sample_logits)
 
 
 
         self.observer_model.eval()
 
-        observer_logits = torch.mean(torch.stack(logits), dim=0)
+        observer_logits = torch.mean(torch.stack(logits), dim=0,)
         
-        performer_logits = self.performer_model(**encodings.to(DEVICE_1)).logits
+        performer_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
 
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
         return observer_logits, performer_logits
 
-    def compute_score__(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
+    def compute_score_(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
         batch = [input_text] if isinstance(input_text, str) else input_text
         encodings = self._tokenize(batch)
         observer_logits, performer_logits = self._get_logits(encodings)
-        encodings = encodings.to(DEVICE_1)
-        performer_logits = performer_logits.to(DEVICE_1)
         ppl = perplexity(encodings, performer_logits)
         x_ppl = entropy(observer_logits.to(DEVICE_1), performer_logits.to(DEVICE_1),
                         encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
         binoculars_scores = ppl / x_ppl
-       
-
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
     
+
     """
     Multi-GPU method.
     Will take an ensemble of the performers logits to better estimate it.
