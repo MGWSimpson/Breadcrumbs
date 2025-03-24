@@ -94,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument("--tokens_seen", type=int, default=512, help="Number of tokens seen by the model")
 
     # Computational arguments
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=4)
 
     # Job arguments
     parser.add_argument("--job_name", type=str, default=None)

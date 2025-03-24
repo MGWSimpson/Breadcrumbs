@@ -17,7 +17,7 @@ huggingface_config = {
 }
 
 # selected using Falcon-7B and Falcon-7B-Instruct at bfloat16
-BINOCULARS_ACCURACY_THRESHOLD = 0.8015310749276843  # optimized for f1-score
+BINOCULARS_ACCURACY_THRESHOLD = 0.9015310749276843  # optimized for f1-score
 BINOCULARS_FPR_THRESHOLD = 0.8536432310785527  # optimized for low-fpr [chosen at 0.01%]
 
 DEVICE_1 = "cuda:0" #  if torch.cuda.is_available() else "cpu"
@@ -109,7 +109,21 @@ class Binoculars(object):
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
 
-    def compute_score(self, input_text):
+    def compute_score(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
+        batch = [input_text] if isinstance(input_text, str) else input_text
+        encodings = self._tokenize(batch)
+        observer_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
+
+        ppl = perplexity(encodings, observer_logits)
+        x_ppl = entropy(observer_logits.to(DEVICE_1), observer_logits.to(DEVICE_1),
+                        encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
+        binoculars_scores = ppl / x_ppl
+       
+
+        binoculars_scores = binoculars_scores.tolist()
+        return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
+
+    def compute_score__(self, input_text):
         batch = [input_text] if isinstance(input_text, str) else input_text
         encodings = self._tokenize(batch)
         self.observer_model.eval()

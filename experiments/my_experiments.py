@@ -35,9 +35,6 @@ class Args:
 
 
 
- # TODO: https://github.com/collinzrj/output2prompt
- # Utilize the above to invert the prompt presuming this experiment works out.
- 
 
 def include_prompt_in_dataset(dataset_path, prompt_key, machine_sample_key, human_sample_key):
     jsonObj = pd.read_json(path_or_buf=dataset_path, lines=True)

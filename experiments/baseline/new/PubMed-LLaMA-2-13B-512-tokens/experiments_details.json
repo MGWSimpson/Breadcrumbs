@@ -1,0 +1,13 @@
+{
+    "dataset_path": "../datasets/core/pubmed/pubmed-llama2_13.jsonl",
+    "dataset_name": "PubMed",
+    "human_sample_key": "article",
+    "machine_sample_key": "meta-llama-Llama-2-13b-hf_generated_text_wo_prompt",
+    "machine_text_source": "LLaMA-2-13B",
+    "tokens_seen": 512,
+    "batch_size": 4,
+    "job_name": "PubMed-LLaMA-2-13B-512-tokens",
+    "start_time": "08:43PM on March 24, 2025",
+    "experiment_path": "results/PubMed-LLaMA-2-13B-512-tokens",
+    "end_time": "09:00PM on March 24, 2025"
+}
