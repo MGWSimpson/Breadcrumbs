@@ -17,8 +17,8 @@ import numpy as np
 from sklearn import metrics
 import pandas as pd
 
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 class Args:
     batch_size = 4
@@ -96,7 +96,7 @@ def run_experiment():
 
 
     regular_json_obj = pd.read_json(path_or_buf=args.dataset_path, lines=True)
-    regular_json_obj = regular_json_obj[:500]
+    regular_json_obj = regular_json_obj[:150]
     regular_ds = Dataset.from_pandas(regular_json_obj)
 
     # breakpoint()

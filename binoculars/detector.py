@@ -122,14 +122,14 @@ class Binoculars(object):
         
 
 
-        logs = np .stack(logs)
+        logs = torch .stack(logs)
         
-        logs = logs.max(axis=0)
+        logs = logs.mean(dim=0)
+    
+    
+        ppl = perplexity(encodings, performer_logits)
 
-
-        ppl = perplexity(encodings, logs)
-
-        x_ppl = entropy(performer_logits.to(DEVICE_1), performer_logits.to(DEVICE_1),
+        x_ppl = entropy(performer_logits.to(DEVICE_1), logs.to(DEVICE_1),
                         encodings.to(DEVICE_1), self.tokenizer.pad_token_id)
         
         binoculars_scores = ppl / x_ppl
