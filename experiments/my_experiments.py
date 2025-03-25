@@ -18,7 +18,7 @@ from sklearn import metrics
 import pandas as pd
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 class Args:
     batch_size = 4
