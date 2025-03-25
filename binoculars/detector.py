@@ -96,7 +96,7 @@ class Binoculars(object):
         performer_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
 
 
-        n_samples = 1
+        n_samples = 9
         self.observer_model.train()
         logits = torch.zeros(performer_logits.shape, device=DEVICE_1)
         for _ in range(n_samples):
@@ -106,7 +106,7 @@ class Binoculars(object):
 
 
         self.observer_model.eval()
-        observer_logits = logits / (1)
+        observer_logits = logits / (n_samples - 1)
         
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
