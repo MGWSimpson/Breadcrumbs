@@ -36,25 +36,26 @@ class Binoculars(object):
         assert_tokenizer_consistency(observer_name_or_path, performer_name_or_path)
 
         self.change_mode(mode)
-        self.observer_model = AutoModelForCausalLM.from_pretrained(observer_name_or_path,
+        """self.observer_model = AutoModelForCausalLM.from_pretrained(observer_name_or_path,
                                                                    device_map={"": DEVICE_1},
                                                                    trust_remote_code=True,
                                                                    torch_dtype=torch.bfloat16 if use_bfloat16
                                                                    else torch.float32,
                                                                    token=huggingface_config["TOKEN"],
                                                                    output_hidden_states=True,
-                                                                    hidden_dropout=0.05,
-                                                                    attention_dropout= 0.05
-                                                                   )
+                                                              
+                                                                   )"""
         self.performer_model = AutoModelForCausalLM.from_pretrained(performer_name_or_path,
                                                                     device_map={"": DEVICE_2},
                                                                     trust_remote_code=True,
                                                                     torch_dtype=torch.bfloat16 if use_bfloat16
                                                                     else torch.float32,
                                                                     token=huggingface_config["TOKEN"],
+                                                                    hidden_dropout=0.05,
+                                                                    attention_dropout= 0.05
                                                                     )
         
-        self.observer_model.eval()
+        # self.observer_model.eval()
         self.performer_model.eval()
 
         self.tokenizer = AutoTokenizer.from_pretrained(performer_name_or_path)
@@ -129,7 +130,7 @@ class Binoculars(object):
     Will take an ensemble of the performers logits to better estimate it.
     Similar to MOSAIC.
     """
-    def compute_score(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
+    def compute_score_(self, input_text: Union[list[str], str]) -> Union[float, list[float]]:
         batch = [input_text] if isinstance(input_text, str) else input_text
         encodings = self._tokenize(batch)
         
@@ -145,8 +146,8 @@ class Binoculars(object):
         binoculars_scores = binoculars_scores.tolist()
         return binoculars_scores[0] if isinstance(input_text, str) else binoculars_scores
     
-
-    def compute_score_(self, input_text):
+    
+    def compute_score(self, input_text):
         batch = [input_text] if isinstance(input_text, str) else input_text
         encodings = self._tokenize(batch)
         self.performer_model.eval()
@@ -156,7 +157,7 @@ class Binoculars(object):
         self.performer_model.train()
         logs = []
         
-        for _ in range(9):
+        for _ in range(6):
             logits = self.performer_model(**encodings.to(DEVICE_1)).logits
             logs.append(logits )
         
