@@ -92,21 +92,22 @@ class Binoculars(object):
 
     @torch.inference_mode()
     def _get_ensembled_logits(self, encodings: transformers.BatchEncoding) -> torch.Tensor:
+        
+        performer_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
+
+
         n_samples = 6
-        logits = []
         self.observer_model.train()
+        logits = torch.zeros(performer_logits.shape, device=DEVICE_1)
         for _ in range(n_samples):
             sample_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
-            logits.append(sample_logits)
+            logits += sample_logits
 
 
 
         self.observer_model.eval()
-
-        observer_logits = torch.mean(torch.stack(logits), dim=0,)
+        observer_logits = logits / (n_samples -1)
         
-        performer_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
-
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
         return observer_logits, performer_logits
