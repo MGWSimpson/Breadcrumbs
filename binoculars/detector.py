@@ -17,11 +17,11 @@ huggingface_config = {
 }
 
 # selected using Falcon-7B and Falcon-7B-Instruct at bfloat16
-BINOCULARS_ACCURACY_THRESHOLD = 0.9015310749276843  # optimized for f1-score
+BINOCULARS_ACCURACY_THRESHOLD = 0.8815310749276843  # optimized for f1-score
 BINOCULARS_FPR_THRESHOLD = 0.8536432310785527  # optimized for low-fpr [chosen at 0.01%]
 
 DEVICE_1 = "cuda:0" #  if torch.cuda.is_available() else "cpu"
-DEVICE_2 = "cuda:0" #  if torch.cuda.device_count() > 1 else DEVICE_1
+DEVICE_2 = "cuda:1" #  if torch.cuda.device_count() > 1 else DEVICE_1
 
 
 
@@ -32,7 +32,8 @@ class Binoculars(object):
                  use_bfloat16: bool = True,
                  max_token_observed: int = 512,
                  mode: str = "low-fpr",
-                 n_samples=5
+                 n_samples=6,
+                 dropout_amount=0.05
                  ) -> None:
         assert_tokenizer_consistency(observer_name_or_path, performer_name_or_path)
 
@@ -44,8 +45,8 @@ class Binoculars(object):
                                                                    else torch.float32,
                                                                    token=huggingface_config["TOKEN"],
                                                                    output_hidden_states=True,
-                                                                    hidden_dropout=0.05,
-                                                                    attention_dropout= 0.05
+                                                                    hidden_dropout=dropout_amount,
+                                                                    attention_dropout= dropout_amount
                                                                    )
         self.performer_model = AutoModelForCausalLM.from_pretrained(performer_name_or_path,
                                                                     device_map={"": DEVICE_2},

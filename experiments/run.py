@@ -10,14 +10,11 @@ import torch
 from datasets import Dataset, logging as datasets_logging
 import numpy as np
 from sklearn import metrics
-
-
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+import random
 
 def main(args):
     # Initialize Binoculars (experiments in paper use the "accuracy" mode threshold wherever applicable)
-    bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen, n_samples=args.n_samples)
+    bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen, n_samples=args.n_samples, dropout_amount=args.dropout_rate )
 
     # Load dataset
     ds = Dataset.from_json(f"{args.dataset_path}")
@@ -94,15 +91,25 @@ if __name__ == "__main__":
     parser.add_argument("--tokens_seen", type=int, default=512, help="Number of tokens seen by the model")
 
     # Computational arguments
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=16)
 
     # Binoculars arguments 
     parser.add_argument("--n_samples", type=int, default=6)
 
+
+    parser.add_argument("--dropout_rate", type=float, default=0.05)
+
     # Job arguments
     parser.add_argument("--job_name", type=str, default=None)
 
+    parser.add_argument("--seed", type=int, default=0)
+
+    
     args = parser.parse_args()
+    
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
     print("Using device:", "cuda" if torch.cuda.is_available() else "cpu")
 

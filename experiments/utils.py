@@ -62,7 +62,7 @@ def scatter_plot_save(args, score_df):
     plt.xlabel("")
     plt.ylabel("Score")
     plt.title("Score Distribution by True Class")
-    plt.legend(title="Class", labels=["Human (0)", "Machine (1)"])
+    # plt.legend(title="Class", labels=["Human (0)", "Machine (1)"])
     plt.grid(True, axis="y", linestyle="--", alpha=0.4)
     plt.tight_layout()
     plt.savefig(f"{args.experiment_path}/score.png", bbox_inches='tight')
