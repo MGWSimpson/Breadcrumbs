@@ -17,7 +17,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 def main(args):
     # Initialize Binoculars (experiments in paper use the "accuracy" mode threshold wherever applicable)
-    bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen)
+    bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen, n_samples=args.n_samples)
 
     # Load dataset
     ds = Dataset.from_json(f"{args.dataset_path}")
@@ -95,6 +95,9 @@ if __name__ == "__main__":
 
     # Computational arguments
     parser.add_argument("--batch_size", type=int, default=32)
+
+    # Binoculars arguments 
+    parser.add_argument("--n_samples", type=int, default=6)
 
     # Job arguments
     parser.add_argument("--job_name", type=str, default=None)

@@ -32,6 +32,7 @@ class Binoculars(object):
                  use_bfloat16: bool = True,
                  max_token_observed: int = 512,
                  mode: str = "low-fpr",
+                 n_samples=5
                  ) -> None:
         assert_tokenizer_consistency(observer_name_or_path, performer_name_or_path)
 
@@ -54,6 +55,8 @@ class Binoculars(object):
                                                                     token=huggingface_config["TOKEN"],
                                                                     )
         
+
+        self.n_samples = n_samples
         self.observer_model.eval()
         self.performer_model.eval()
 
@@ -97,18 +100,16 @@ class Binoculars(object):
         
         performer_logits = self.performer_model(**encodings.to(DEVICE_2)).logits
 
-
-        n_samples = 6
         self.observer_model.train()
         logits = torch.zeros(performer_logits.shape, device=DEVICE_1)
-        for _ in range(n_samples):
+        for _ in range(self.n_samples):
             sample_logits = self.observer_model(**encodings.to(DEVICE_1)).logits
             logits += sample_logits
 
 
 
         self.observer_model.eval()
-        observer_logits = logits / (n_samples - 1)
+        observer_logits = logits / (self.n_samples)
         
         if DEVICE_1 != "cpu":
             torch.cuda.synchronize()
