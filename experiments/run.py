@@ -91,7 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--tokens_seen", type=int, default=512, help="Number of tokens seen by the model")
 
     # Computational arguments
-    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--batch_size", type=int, default=4)
 
     # Binoculars arguments 
     parser.add_argument("--n_samples", type=int, default=6)
