@@ -1,0 +1,16 @@
+{
+    "dataset_path": "../datasets/core/cc_news/cc_news-llama2_13.jsonl",
+    "dataset_name": "CC-News",
+    "human_sample_key": "text",
+    "machine_sample_key": "meta-llama-Llama-2-13b-hf_generated_text_wo_prompt",
+    "machine_text_source": "LLaMA-2-13B",
+    "tokens_seen": 512,
+    "batch_size": 4,
+    "n_samples": 4,
+    "dropout_rate": 0.05,
+    "job_name": "n_sample_ablation_4",
+    "seed": 0,
+    "start_time": "09:12PM on March 26, 2025",
+    "experiment_path": "results/n_sample_ablation_4",
+    "end_time": "09:41PM on March 26, 2025"
+}

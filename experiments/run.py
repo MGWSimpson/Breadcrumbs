@@ -11,13 +11,18 @@ from datasets import Dataset, logging as datasets_logging
 import numpy as np
 from sklearn import metrics
 import random
+import pandas as pd
 
 def main(args):
     # Initialize Binoculars (experiments in paper use the "accuracy" mode threshold wherever applicable)
     bino = Binoculars(mode="accuracy", max_token_observed=args.tokens_seen, n_samples=args.n_samples, dropout_amount=args.dropout_rate )
 
+    regular_json_obj = pd.read_json(path_or_buf=args.dataset_path, lines=True)
+    # regular_json_obj = regular_json_obj[:1000]
+    ds = Dataset.from_pandas(regular_json_obj)
+
     # Load dataset
-    ds = Dataset.from_json(f"{args.dataset_path}")
+    # ds = Dataset.from_json(f"{args.dataset_path}")
 
     # Set (non) default values
     args.dataset_name = args.dataset_name or args.dataset_path.rstrip("/").split("/")[-2]
